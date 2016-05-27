@@ -1,3 +1,10 @@
 *.pyc
 data
 *.md~
+
+/.DS_Store
+/.ipynb_checkpoints/
+/logs/
+
+/output.txt
+/output2.txt

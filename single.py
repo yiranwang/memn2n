@@ -9,6 +9,7 @@ from memn2n import MemN2N
 from itertools import chain
 from six.moves import range
 
+import os
 import tensorflow as tf
 import numpy as np
 
@@ -16,15 +17,27 @@ tf.flags.DEFINE_float("learning_rate", 0.01, "Learning rate for Adam Optimizer."
 tf.flags.DEFINE_float("epsilon", 1e-8, "Epsilon value for Adam Optimizer.")
 tf.flags.DEFINE_float("max_grad_norm", 40.0, "Clip gradients to this norm.")
 tf.flags.DEFINE_integer("evaluation_interval", 10, "Evaluate and print results every x epochs")
-tf.flags.DEFINE_integer("batch_size", 32, "Batch size for training.")
+tf.flags.DEFINE_integer("batch_size", 64, "Batch size for training.")
 tf.flags.DEFINE_integer("hops", 3, "Number of hops in the Memory Network.")
 tf.flags.DEFINE_integer("epochs", 200, "Number of epochs to train for.")
 tf.flags.DEFINE_integer("embedding_size", 20, "Embedding size for embedding matrices.")
 tf.flags.DEFINE_integer("memory_size", 50, "Maximum size of memory.")
 tf.flags.DEFINE_integer("task_id", 1, "bAbI task id, 1 <= id <= 20")
 tf.flags.DEFINE_integer("random_state", None, "Random state.")
-tf.flags.DEFINE_string("data_dir", "data/tasks_1-20_v1-2/en/", "Directory containing bAbI tasks")
+tf.flags.DEFINE_string("data_dir", "../code/data/babi/tasks_1-20_v1-2/en/", "Directory containing bAbI tasks")
 FLAGS = tf.flags.FLAGS
+
+def get_log_dir_name():
+    lr = FLAGS.learning_rate
+    eps = FLAGS.epsilon
+    mgn = FLAGS.max_grad_norm
+    hp = FLAGS.hops
+    es = FLAGS.embedding_size
+    ms = FLAGS.memory_size
+    ti = FLAGS.task_id
+    
+    log_dir_name = "lr={0}_eps={1}_mgn={2}_hp={3}_es={4}_ms={5}_ti={6}".format(lr, eps, mgn, hp, es, ms, ti)
+    return os.path.join('./logs', log_dir_name)
 
 print("Started Task:", FLAGS.task_id)
 
@@ -77,7 +90,10 @@ optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate, epsilon=FL
 batches = zip(range(0, n_train-batch_size, batch_size), range(batch_size, n_train, batch_size))
 with tf.Session() as sess:
     model = MemN2N(batch_size, vocab_size, sentence_size, memory_size, FLAGS.embedding_size, session=sess,
-                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, optimizer=optimizer)
+                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, nonlin=tf.nn.relu, optimizer=optimizer)
+    
+    writer = tf.train.SummaryWriter(get_log_dir_name(), sess.graph)
+    
     for t in range(1, FLAGS.epochs+1):
         np.random.shuffle(batches)
         total_cost = 0.0
@@ -86,8 +102,10 @@ with tf.Session() as sess:
             s = trainS[start:end]
             q = trainQ[start:end]
             a = trainA[start:end]
-            cost_t = model.batch_fit(s, q, a)
+            cost_t, cost_summary = model.batch_fit(s, q, a)
             total_cost += cost_t
+            
+            writer.add_summary(cost_summary, t*n_train+start)
 
         if t % FLAGS.evaluation_interval == 0:
             train_preds = []
@@ -98,10 +116,13 @@ with tf.Session() as sess:
                 pred = model.predict(s, q)
                 train_preds += list(pred)
 
-            val_preds = model.predict(valS, valQ)
+#             val_preds = model.predict(valS, valQ)
             train_acc = metrics.accuracy_score(np.array(train_preds), train_labels)
-            val_acc = metrics.accuracy_score(val_preds, val_labels)
+#             val_acc = metrics.accuracy_score(val_preds, val_labels)
 
+            val_acc, val_acc_summary = model.get_val_acc_summary(valS, valQ, val_labels)
+            writer.add_summary(val_acc_summary, t)
+            
             print('-----------------------')
             print('Epoch', t)
             print('Total Cost:', total_cost)

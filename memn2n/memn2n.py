@@ -120,6 +120,8 @@ class MemN2N(object):
         # loss op
         loss_op = cross_entropy_sum
 
+        loss_op_summary = tf.scalar_summary("loss", loss_op)
+
         # gradient pipeline
         grads_and_vars = self._opt.compute_gradients(loss_op)
         grads_and_vars = [(tf.clip_by_norm(g, self._max_grad_norm), v) for g,v in grads_and_vars]
@@ -137,12 +139,20 @@ class MemN2N(object):
         predict_proba_op = tf.nn.softmax(logits, name="predict_proba_op")
         predict_log_proba_op = tf.log(predict_proba_op, name="predict_log_proba_op")
 
+        # validation accuracy ops
+        self.val_acc_op = self._get_val_acc(predict_op, self._val_answers)
+        self.val_acc_summary = tf.scalar_summary("val_acc", self.val_acc_op)
+
         # assign ops
         self.loss_op = loss_op
         self.predict_op = predict_op
         self.predict_proba_op = predict_proba_op
         self.predict_log_proba_op = predict_log_proba_op
         self.train_op = train_op
+        self.loss_op_summary = loss_op_summary
+
+        # Summaries
+        self.merged = tf.merge_all_summaries()
 
         init_op = tf.initialize_all_variables()
         self._sess = session
@@ -153,6 +163,7 @@ class MemN2N(object):
         self._stories = tf.placeholder(tf.int32, [None, self._memory_size, self._sentence_size], name="stories")
         self._queries = tf.placeholder(tf.int32, [None, self._sentence_size], name="queries")
         self._answers = tf.placeholder(tf.int32, [None, self._vocab_size], name="answers")
+        self._val_answers = tf.placeholder(tf.int32, [None], name="val_answers")
 
     def _build_vars(self):
         with tf.variable_scope(self._name):
@@ -190,11 +201,16 @@ class MemN2N(object):
                 u_k = tf.matmul(u[-1], self.H) + o_k
                 # nonlinearity
                 if self._nonlin:
-                    u_k = nonlin(u_k)
+                    u_k = self._nonlin(u_k)
 
                 u.append(u_k)
 
             return tf.matmul(u_k, self.W)
+
+    def _get_val_acc(self, pred_op, val_labels):
+        corr_pred = tf.equal(tf.cast(pred_op, tf.int32), val_labels)
+        acc_op = tf.reduce_mean(tf.cast(corr_pred, tf.float32))
+        return acc_op
 
     def batch_fit(self, stories, queries, answers):
         """Runs the training algorithm over the passed batch
@@ -208,8 +224,8 @@ class MemN2N(object):
             loss: floating-point number, the loss computed for the batch
         """
         feed_dict = {self._stories: stories, self._queries: queries, self._answers: answers}
-        loss, _ = self._sess.run([self.loss_op, self.train_op], feed_dict=feed_dict)
-        return loss
+        loss, loss_op_summary, _ = self._sess.run([self.loss_op, self.loss_op_summary, self.train_op], feed_dict=feed_dict)
+        return loss, loss_op_summary
 
     def predict(self, stories, queries):
         """Predicts answers as one-hot encoding.
@@ -236,6 +252,10 @@ class MemN2N(object):
         """
         feed_dict = {self._stories: stories, self._queries: queries}
         return self._sess.run(self.predict_proba_op, feed_dict=feed_dict)
+
+    def get_val_acc_summary(self, stories, queries, answers):
+        feed_dict = {self._stories: stories, self._queries: queries, self._val_answers: answers}
+        return self._sess.run([self.val_acc_op, self.val_acc_summary], feed_dict=feed_dict)
 
     def predict_log_proba(self, stories, queries):
         """Predicts log probabilities of answers.
