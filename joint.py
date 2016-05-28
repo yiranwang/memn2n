@@ -15,6 +15,7 @@ import pandas as pd
 
 tf.flags.DEFINE_float("learning_rate", 0.01, "Learning rate for Adam Optimizer.")
 tf.flags.DEFINE_float("epsilon", 1e-8, "Epsilon value for Adam Optimizer.")
+tf.flags.DEFINE_float("regularization", 0.02, "Regularization.")
 tf.flags.DEFINE_float("max_grad_norm", 40.0, "Clip gradients to this norm.")
 tf.flags.DEFINE_integer("evaluation_interval", 10, "Evaluate and print results every x epochs")
 tf.flags.DEFINE_integer("batch_size", 32, "Batch size for training.")
@@ -26,11 +27,11 @@ tf.flags.DEFINE_integer("memory_size", 50, "Maximum size of memory.")
 tf.flags.DEFINE_integer("random_state", None, "Random state.")
 tf.flags.DEFINE_string("data_dir", "../code/data/babi/tasks_1-20_v1-2/en/", "Directory containing bAbI tasks")
 tf.flags.DEFINE_string("output_file", "scores.csv", "Name of output file for final bAbI accuracy scores.")
-# TODO add regularization
 FLAGS = tf.flags.FLAGS
 
 print("Started Joint Model")
 print("alpha = {}".format(FLAGS.learning_rate))
+print("lambda = {}".format(FLAGS.regularization))
 print("hops = {}".format(FLAGS.hops))
 print("early stopping = {}".format(FLAGS.early))
 print("embedding size = {}".format(FLAGS.embedding_size))
@@ -113,7 +114,7 @@ best_val_epoch = -1
 stop_early = False
 with tf.Session() as sess:
     model = MemN2N(batch_size, vocab_size, sentence_size, memory_size, FLAGS.embedding_size, session=sess,
-                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, optimizer=optimizer)
+                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, optimizer=optimizer, l2=FLAGS.regularization, nonlin=tf.nn.relu)
     for i in range(1, FLAGS.epochs+1):
         np.random.shuffle(batches)
         total_cost = 0.0
