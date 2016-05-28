@@ -60,6 +60,7 @@ class MemN2N(object):
         optimizer=tf.train.AdamOptimizer(learning_rate=1e-2),
         encoding=position_encoding,
         session=tf.Session(),
+        l2 = 0.02,
         name='MemN2N'):
         """Creates an End-To-End Memory Network
 
@@ -107,6 +108,9 @@ class MemN2N(object):
         self._init = initializer
         self._opt = optimizer
         self._name = name
+        self._l2 = l2
+
+        print(l2)
 
         self._build_inputs()
         self._build_vars()
@@ -118,7 +122,8 @@ class MemN2N(object):
         cross_entropy_sum = tf.reduce_sum(cross_entropy, name="cross_entropy_sum")
 
         # loss op
-        loss_op = cross_entropy_sum
+        reg_loss = self._l2 * tf.add_n(tf.get_collection('reg_loss'))
+        loss_op = cross_entropy_sum + reg_loss
 
         loss_op_summary = tf.scalar_summary("loss", loss_op)
 
@@ -178,6 +183,12 @@ class MemN2N(object):
             self.H = tf.Variable(self._init([self._embedding_size, self._embedding_size]), name="H")
             self.W = tf.Variable(self._init([self._embedding_size, self._vocab_size]), name="W")
         self._nil_vars = set([self.A.name, self.B.name])
+
+        tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.A))
+        tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.B))
+        tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.TA))
+        tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.W))
+        tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.H))
 
     def _inference(self, stories, queries):
         with tf.variable_scope(self._name):

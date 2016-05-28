@@ -6,7 +6,4 @@ data
 /.ipynb_checkpoints/
 /logs/
 
-/output.txt
-/output2.txt
-
-/output2_1
+/output*

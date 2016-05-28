@@ -15,6 +15,7 @@ import numpy as np
 
 tf.flags.DEFINE_float("learning_rate", 0.01, "Learning rate for Adam Optimizer.")
 tf.flags.DEFINE_float("epsilon", 1e-8, "Epsilon value for Adam Optimizer.")
+tf.flags.DEFINE_float("regularization", 0.02, "Regularization.")
 tf.flags.DEFINE_float("max_grad_norm", 40.0, "Clip gradients to this norm.")
 tf.flags.DEFINE_integer("evaluation_interval", 10, "Evaluate and print results every x epochs")
 tf.flags.DEFINE_integer("batch_size", 64, "Batch size for training.")
@@ -35,8 +36,9 @@ def get_log_dir_name():
     es = FLAGS.embedding_size
     ms = FLAGS.memory_size
     ti = FLAGS.task_id
+    reg = FLAGS.regularization
 
-    log_dir_name = "lr={0}_eps={1}_mgn={2}_hp={3}_es={4}_ms={5}".format(lr, eps, mgn, hp, es, ms)
+    log_dir_name = "lr={0}_eps={1}_mgn={2}_hp={3}_es={4}_ms={5}_reg={6}".format(lr, eps, mgn, hp, es, ms, reg)
     return os.path.join('./logs', str(ti), log_dir_name)
 
 print("Started Task:", FLAGS.task_id)
@@ -90,7 +92,7 @@ optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate, epsilon=FL
 batches = zip(range(0, n_train-batch_size, batch_size), range(batch_size, n_train, batch_size))
 with tf.Session() as sess:
     model = MemN2N(batch_size, vocab_size, sentence_size, memory_size, FLAGS.embedding_size, session=sess,
-                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, optimizer=optimizer)
+                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, optimizer=optimizer, l2=FLAGS.regularization)
 
     writer = tf.train.SummaryWriter(get_log_dir_name(), sess.graph)
 
