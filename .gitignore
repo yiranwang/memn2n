@@ -7,3 +7,11 @@ data
 /logs/
 
 /output*
+
+/weights/
+
+/Untitled.ipynb
+
+/babi/
+
+/MemN2N.ipynb
