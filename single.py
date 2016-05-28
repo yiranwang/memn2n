@@ -35,9 +35,9 @@ def get_log_dir_name():
     es = FLAGS.embedding_size
     ms = FLAGS.memory_size
     ti = FLAGS.task_id
-    
-    log_dir_name = "lr={0}_eps={1}_mgn={2}_hp={3}_es={4}_ms={5}_ti={6}".format(lr, eps, mgn, hp, es, ms, ti)
-    return os.path.join('./logs', log_dir_name)
+
+    log_dir_name = "lr={0}_eps={1}_mgn={2}_hp={3}_es={4}_ms={5}".format(lr, eps, mgn, hp, es, ms)
+    return os.path.join('./logs', str(ti), log_dir_name)
 
 print("Started Task:", FLAGS.task_id)
 
@@ -90,10 +90,10 @@ optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate, epsilon=FL
 batches = zip(range(0, n_train-batch_size, batch_size), range(batch_size, n_train, batch_size))
 with tf.Session() as sess:
     model = MemN2N(batch_size, vocab_size, sentence_size, memory_size, FLAGS.embedding_size, session=sess,
-                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, nonlin=tf.nn.relu, optimizer=optimizer)
-    
+                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, optimizer=optimizer)
+
     writer = tf.train.SummaryWriter(get_log_dir_name(), sess.graph)
-    
+
     for t in range(1, FLAGS.epochs+1):
         np.random.shuffle(batches)
         total_cost = 0.0
@@ -104,7 +104,7 @@ with tf.Session() as sess:
             a = trainA[start:end]
             cost_t, cost_summary = model.batch_fit(s, q, a)
             total_cost += cost_t
-            
+
             writer.add_summary(cost_summary, t*n_train+start)
 
         if t % FLAGS.evaluation_interval == 0:
@@ -122,7 +122,7 @@ with tf.Session() as sess:
 
             val_acc, val_acc_summary = model.get_val_acc_summary(valS, valQ, val_labels)
             writer.add_summary(val_acc_summary, t)
-            
+
             print('-----------------------')
             print('Epoch', t)
             print('Total Cost:', total_cost)
