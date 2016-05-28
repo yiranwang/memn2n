@@ -127,6 +127,11 @@ class MemN2N(object):
 
         loss_op_summary = tf.scalar_summary("loss", loss_op)
 
+        ema = tf.train.ExponentialMovingAverage(decay=0.99)
+        self.update_loss_ema = ema.apply([loss_op])
+        loss_ema = ema.average(loss_op)
+        self.loss_ema_op = tf.scalar_summary('loss_ema', loss_ema)
+
         # gradient pipeline
         grads_and_vars = self._opt.compute_gradients(loss_op)
         grads_and_vars = [(tf.clip_by_norm(g, self._max_grad_norm), v) for g,v in grads_and_vars]
@@ -235,8 +240,8 @@ class MemN2N(object):
             loss: floating-point number, the loss computed for the batch
         """
         feed_dict = {self._stories: stories, self._queries: queries, self._answers: answers}
-        loss, loss_op_summary, _ = self._sess.run([self.loss_op, self.loss_op_summary, self.train_op], feed_dict=feed_dict)
-        return loss, loss_op_summary
+        loss, loss_op_summary, _, _, loss_ema = self._sess.run([self.loss_op, self.loss_op_summary, self.train_op, self.update_loss_ema, self.loss_ema_op], feed_dict=feed_dict)
+        return loss, loss_op_summary, loss_ema
 
     def predict(self, stories, queries):
         """Predicts answers as one-hot encoding.

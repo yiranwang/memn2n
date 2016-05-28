@@ -104,10 +104,11 @@ with tf.Session() as sess:
             s = trainS[start:end]
             q = trainQ[start:end]
             a = trainA[start:end]
-            cost_t, cost_summary = model.batch_fit(s, q, a)
+            cost_t, cost_summary, cost_ema = model.batch_fit(s, q, a)
             total_cost += cost_t
 
             writer.add_summary(cost_summary, t*n_train+start)
+            writer.add_summary(cost_ema, t*n_train+start)
 
         if t % FLAGS.evaluation_interval == 0:
             train_preds = []
