@@ -1,0 +1,720 @@
+0.01, 3, 50, 50
+Started Task: 3
+Longest sentence length 7
+Longest story length 228
+Average story length 50
+[[19 12 26 20  0  0  0]
+ [15 21 28 26  4  0  0]
+ [ 6 16 28 26 22  0  0]
+ [15 13 26  1 27  0  0]
+ [15 12 26 10  0  0  0]
+ [15 16 28 26 11  0  0]
+ [19 18 26 20  0  0  0]
+ [15 18 26 10  0  0  0]
+ [ 6 21 28 26 11  0  0]
+ [ 6 13 26 10  0  0  0]
+ [19 21 28 26 14  0  0]
+ [19 33 28 26 17  0  0]
+ [15 24  8 26  1 27  0]
+ [15 23 31 26  1  0  0]
+ [25 21 28 26 14  0  0]
+ [ 6 18 26 10 27  0  0]
+ [ 6 29 26 10  0  0  0]
+ [15 30 28 26 17  0  0]
+ [ 6  9 26 10  0  0  0]
+ [15  9 26  1  0  0  0]
+ [15 13 26  1  0  0  0]
+ [15 33 28 26 22  0  0]
+ [25 33  2 28 26  4  0]
+ [25 29 26 20  0  0  0]
+ [15 16 28 26  3  0  0]
+ [15 30 28 26 22  0  0]
+ [25 18 26 20  0  0  0]
+ [19 33 28 26  4  0  0]
+ [19 21 28 26 22  0  0]
+ [15 30 28 26 14  0  0]
+ [25 21 28 26 11  0  0]
+ [19 21 28 26 17  0  0]
+ [ 6 29 26 10  0  0  0]
+ [19 16 28 26  4  0  0]
+ [19 13 26 20 27  0  0]
+ [19  7 26 20  0  0  0]
+ [15 33 28 26 11  0  0]
+ [15  7 26  1 27  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]]
+Training set shape (900, 50, 7)
+Training Size 900
+Validation Size 100
+Testing Size 1000
+-----------------------
+Epoch 10
+Total Cost: 832.081873655
+Training Accuracy: 0.674444444444
+Validation Accuracy: 0.38
+-----------------------
+-----------------------
+Epoch 20
+Total Cost: 411.344309092
+Training Accuracy: 0.816666666667
+Validation Accuracy: 0.4
+-----------------------
+-----------------------
+Epoch 30
+Total Cost: 274.013184823
+Training Accuracy: 0.942222222222
+Validation Accuracy: 0.51
+-----------------------
+-----------------------
+Epoch 40
+Total Cost: 200.650505818
+Training Accuracy: 0.867777777778
+Validation Accuracy: 0.51
+-----------------------
+-----------------------
+Epoch 50
+Total Cost: 149.697922498
+Training Accuracy: 0.962222222222
+Validation Accuracy: 0.54
+-----------------------
+-----------------------
+Epoch 60
+Total Cost: 229.359442413
+Training Accuracy: 0.918888888889
+Validation Accuracy: 0.56
+-----------------------
+-----------------------
+Epoch 70
+Total Cost: 130.523763493
+Training Accuracy: 0.96
+Validation Accuracy: 0.57
+-----------------------
+-----------------------
+Epoch 80
+Total Cost: 115.084184149
+Training Accuracy: 0.99
+Validation Accuracy: 0.49
+-----------------------
+-----------------------
+Epoch 90
+Total Cost: 125.630764045
+Training Accuracy: 0.938888888889
+Validation Accuracy: 0.54
+-----------------------
+-----------------------
+Epoch 100
+Total Cost: 107.741818212
+Training Accuracy: 0.974444444444
+Validation Accuracy: 0.49
+-----------------------
+-----------------------
+Epoch 110
+Total Cost: 70.843874298
+Training Accuracy: 0.972222222222
+Validation Accuracy: 0.51
+-----------------------
+-----------------------
+Epoch 120
+Total Cost: 56.0378140121
+Training Accuracy: 0.984444444444
+Validation Accuracy: 0.5
+-----------------------
+-----------------------
+Epoch 130
+Total Cost: 132.744081974
+Training Accuracy: 0.95
+Validation Accuracy: 0.44
+-----------------------
+-----------------------
+Epoch 140
+Total Cost: 63.2195933014
+Training Accuracy: 0.98
+Validation Accuracy: 0.54
+-----------------------
+-----------------------
+Epoch 150
+Total Cost: 114.000969589
+Training Accuracy: 0.97
+Validation Accuracy: 0.49
+-----------------------
+-----------------------
+Epoch 160
+Total Cost: 82.8370943824
+Training Accuracy: 0.981111111111
+Validation Accuracy: 0.5
+-----------------------
+-----------------------
+Epoch 170
+Total Cost: 133.34606716
+Training Accuracy: 0.973333333333
+Validation Accuracy: 0.51
+-----------------------
+-----------------------
+Epoch 180
+Total Cost: 86.2290439602
+Training Accuracy: 0.983333333333
+Validation Accuracy: 0.54
+-----------------------
+-----------------------
+Epoch 190
+Total Cost: 49.396960563
+Training Accuracy: 0.993333333333
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 200
+Total Cost: 133.464860822
+Training Accuracy: 0.95
+Validation Accuracy: 0.48
+-----------------------
+Testing Accuracy: 0.195
+0.006, 3, 50, 50
+Started Task: 3
+Longest sentence length 7
+Longest story length 228
+Average story length 50
+[[19 12 26 20  0  0  0]
+ [15 21 28 26  4  0  0]
+ [ 6 16 28 26 22  0  0]
+ [15 13 26  1 27  0  0]
+ [15 12 26 10  0  0  0]
+ [15 16 28 26 11  0  0]
+ [19 18 26 20  0  0  0]
+ [15 18 26 10  0  0  0]
+ [ 6 21 28 26 11  0  0]
+ [ 6 13 26 10  0  0  0]
+ [19 21 28 26 14  0  0]
+ [19 33 28 26 17  0  0]
+ [15 24  8 26  1 27  0]
+ [15 23 31 26  1  0  0]
+ [25 21 28 26 14  0  0]
+ [ 6 18 26 10 27  0  0]
+ [ 6 29 26 10  0  0  0]
+ [15 30 28 26 17  0  0]
+ [ 6  9 26 10  0  0  0]
+ [15  9 26  1  0  0  0]
+ [15 13 26  1  0  0  0]
+ [15 33 28 26 22  0  0]
+ [25 33  2 28 26  4  0]
+ [25 29 26 20  0  0  0]
+ [15 16 28 26  3  0  0]
+ [15 30 28 26 22  0  0]
+ [25 18 26 20  0  0  0]
+ [19 33 28 26  4  0  0]
+ [19 21 28 26 22  0  0]
+ [15 30 28 26 14  0  0]
+ [25 21 28 26 11  0  0]
+ [19 21 28 26 17  0  0]
+ [ 6 29 26 10  0  0  0]
+ [19 16 28 26  4  0  0]
+ [19 13 26 20 27  0  0]
+ [19  7 26 20  0  0  0]
+ [15 33 28 26 11  0  0]
+ [15  7 26  1 27  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]]
+Training set shape (900, 50, 7)
+Training Size 900
+Validation Size 100
+Testing Size 1000
+-----------------------
+Epoch 10
+Total Cost: 1127.74255848
+Training Accuracy: 0.53
+Validation Accuracy: 0.36
+-----------------------
+-----------------------
+Epoch 20
+Total Cost: 494.183688968
+Training Accuracy: 0.827777777778
+Validation Accuracy: 0.45
+-----------------------
+-----------------------
+Epoch 30
+Total Cost: 348.932152808
+Training Accuracy: 0.826666666667
+Validation Accuracy: 0.43
+-----------------------
+-----------------------
+Epoch 40
+Total Cost: 174.724889286
+Training Accuracy: 0.964444444444
+Validation Accuracy: 0.49
+-----------------------
+-----------------------
+Epoch 50
+Total Cost: 136.472764716
+Training Accuracy: 0.917777777778
+Validation Accuracy: 0.54
+-----------------------
+-----------------------
+Epoch 60
+Total Cost: 52.9224985903
+Training Accuracy: 0.974444444444
+Validation Accuracy: 0.61
+-----------------------
+-----------------------
+Epoch 70
+Total Cost: 45.3560516981
+Training Accuracy: 0.986666666667
+Validation Accuracy: 0.51
+-----------------------
+-----------------------
+Epoch 80
+Total Cost: 47.3577739429
+Training Accuracy: 0.985555555556
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 90
+Total Cost: 47.785499841
+Training Accuracy: 0.983333333333
+Validation Accuracy: 0.49
+-----------------------
+-----------------------
+Epoch 100
+Total Cost: 27.5420593321
+Training Accuracy: 0.988888888889
+Validation Accuracy: 0.53
+-----------------------
+-----------------------
+Epoch 110
+Total Cost: 128.109514643
+Training Accuracy: 0.98
+Validation Accuracy: 0.55
+-----------------------
+-----------------------
+Epoch 120
+Total Cost: 14.6818481907
+Training Accuracy: 0.994444444444
+Validation Accuracy: 0.47
+-----------------------
+-----------------------
+Epoch 130
+Total Cost: 46.2056600899
+Training Accuracy: 0.975555555556
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 140
+Total Cost: 24.3917822428
+Training Accuracy: 0.998888888889
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 150
+Total Cost: 18.9209133526
+Training Accuracy: 0.993333333333
+Validation Accuracy: 0.54
+-----------------------
+-----------------------
+Epoch 160
+Total Cost: 141.75905436
+Training Accuracy: 0.98
+Validation Accuracy: 0.53
+-----------------------
+-----------------------
+Epoch 170
+Total Cost: 40.8039466939
+Training Accuracy: 0.995555555556
+Validation Accuracy: 0.52
+-----------------------
+-----------------------
+Epoch 180
+Total Cost: 62.1739204386
+Training Accuracy: 0.982222222222
+Validation Accuracy: 0.51
+-----------------------
+-----------------------
+Epoch 190
+Total Cost: 66.5077719837
+Training Accuracy: 0.991111111111
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 200
+Total Cost: 27.4321790636
+Training Accuracy: 0.992222222222
+Validation Accuracy: 0.52
+-----------------------
+Testing Accuracy: 0.191
+0.003, 3, 50, 50
+Started Task: 3
+Longest sentence length 7
+Longest story length 228
+Average story length 50
+[[19 12 26 20  0  0  0]
+ [15 21 28 26  4  0  0]
+ [ 6 16 28 26 22  0  0]
+ [15 13 26  1 27  0  0]
+ [15 12 26 10  0  0  0]
+ [15 16 28 26 11  0  0]
+ [19 18 26 20  0  0  0]
+ [15 18 26 10  0  0  0]
+ [ 6 21 28 26 11  0  0]
+ [ 6 13 26 10  0  0  0]
+ [19 21 28 26 14  0  0]
+ [19 33 28 26 17  0  0]
+ [15 24  8 26  1 27  0]
+ [15 23 31 26  1  0  0]
+ [25 21 28 26 14  0  0]
+ [ 6 18 26 10 27  0  0]
+ [ 6 29 26 10  0  0  0]
+ [15 30 28 26 17  0  0]
+ [ 6  9 26 10  0  0  0]
+ [15  9 26  1  0  0  0]
+ [15 13 26  1  0  0  0]
+ [15 33 28 26 22  0  0]
+ [25 33  2 28 26  4  0]
+ [25 29 26 20  0  0  0]
+ [15 16 28 26  3  0  0]
+ [15 30 28 26 22  0  0]
+ [25 18 26 20  0  0  0]
+ [19 33 28 26  4  0  0]
+ [19 21 28 26 22  0  0]
+ [15 30 28 26 14  0  0]
+ [25 21 28 26 11  0  0]
+ [19 21 28 26 17  0  0]
+ [ 6 29 26 10  0  0  0]
+ [19 16 28 26  4  0  0]
+ [19 13 26 20 27  0  0]
+ [19  7 26 20  0  0  0]
+ [15 33 28 26 11  0  0]
+ [15  7 26  1 27  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]]
+Training set shape (900, 50, 7)
+Training Size 900
+Validation Size 100
+Testing Size 1000
+-----------------------
+Epoch 10
+Total Cost: 1377.49567699
+Training Accuracy: 0.435555555556
+Validation Accuracy: 0.3
+-----------------------
+-----------------------
+Epoch 20
+Total Cost: 898.40464282
+Training Accuracy: 0.623333333333
+Validation Accuracy: 0.4
+-----------------------
+-----------------------
+Epoch 30
+Total Cost: 565.927847564
+Training Accuracy: 0.716666666667
+Validation Accuracy: 0.39
+-----------------------
+-----------------------
+Epoch 40
+Total Cost: 330.412690401
+Training Accuracy: 0.876666666667
+Validation Accuracy: 0.47
+-----------------------
+-----------------------
+Epoch 50
+Total Cost: 270.18847239
+Training Accuracy: 0.908888888889
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 60
+Total Cost: 129.730465561
+Training Accuracy: 0.952222222222
+Validation Accuracy: 0.46
+-----------------------
+-----------------------
+Epoch 70
+Total Cost: 104.28080377
+Training Accuracy: 0.984444444444
+Validation Accuracy: 0.47
+-----------------------
+-----------------------
+Epoch 80
+Total Cost: 46.1108022258
+Training Accuracy: 0.992222222222
+Validation Accuracy: 0.46
+-----------------------
+-----------------------
+Epoch 90
+Total Cost: 26.2430304661
+Training Accuracy: 0.998888888889
+Validation Accuracy: 0.49
+-----------------------
+-----------------------
+Epoch 100
+Total Cost: 17.5268465765
+Training Accuracy: 0.995555555556
+Validation Accuracy: 0.46
+-----------------------
+-----------------------
+Epoch 110
+Total Cost: 5.89333168603
+Training Accuracy: 0.998888888889
+Validation Accuracy: 0.47
+-----------------------
+-----------------------
+Epoch 120
+Total Cost: 5.26081306022
+Training Accuracy: 1.0
+Validation Accuracy: 0.5
+-----------------------
+-----------------------
+Epoch 130
+Total Cost: 1.54974445468
+Training Accuracy: 1.0
+Validation Accuracy: 0.49
+-----------------------
+-----------------------
+Epoch 140
+Total Cost: 1.19827065896
+Training Accuracy: 1.0
+Validation Accuracy: 0.49
+-----------------------
+-----------------------
+Epoch 150
+Total Cost: 0.970766433515
+Training Accuracy: 1.0
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 160
+Total Cost: 0.805149822962
+Training Accuracy: 1.0
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 170
+Total Cost: 0.68002303876
+Training Accuracy: 1.0
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 180
+Total Cost: 0.581181115005
+Training Accuracy: 1.0
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 190
+Total Cost: 0.500987780746
+Training Accuracy: 1.0
+Validation Accuracy: 0.48
+-----------------------
+-----------------------
+Epoch 200
+Total Cost: 0.435456249397
+Training Accuracy: 1.0
+Validation Accuracy: 0.48
+-----------------------
+Testing Accuracy: 0.248
+0.001, 3, 50, 50
+Started Task: 3
+Longest sentence length 7
+Longest story length 228
+Average story length 50
+[[19 12 26 20  0  0  0]
+ [15 21 28 26  4  0  0]
+ [ 6 16 28 26 22  0  0]
+ [15 13 26  1 27  0  0]
+ [15 12 26 10  0  0  0]
+ [15 16 28 26 11  0  0]
+ [19 18 26 20  0  0  0]
+ [15 18 26 10  0  0  0]
+ [ 6 21 28 26 11  0  0]
+ [ 6 13 26 10  0  0  0]
+ [19 21 28 26 14  0  0]
+ [19 33 28 26 17  0  0]
+ [15 24  8 26  1 27  0]
+ [15 23 31 26  1  0  0]
+ [25 21 28 26 14  0  0]
+ [ 6 18 26 10 27  0  0]
+ [ 6 29 26 10  0  0  0]
+ [15 30 28 26 17  0  0]
+ [ 6  9 26 10  0  0  0]
+ [15  9 26  1  0  0  0]
+ [15 13 26  1  0  0  0]
+ [15 33 28 26 22  0  0]
+ [25 33  2 28 26  4  0]
+ [25 29 26 20  0  0  0]
+ [15 16 28 26  3  0  0]
+ [15 30 28 26 22  0  0]
+ [25 18 26 20  0  0  0]
+ [19 33 28 26  4  0  0]
+ [19 21 28 26 22  0  0]
+ [15 30 28 26 14  0  0]
+ [25 21 28 26 11  0  0]
+ [19 21 28 26 17  0  0]
+ [ 6 29 26 10  0  0  0]
+ [19 16 28 26  4  0  0]
+ [19 13 26 20 27  0  0]
+ [19  7 26 20  0  0  0]
+ [15 33 28 26 11  0  0]
+ [15  7 26  1 27  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0]]
+Training set shape (900, 50, 7)
+Training Size 900
+Validation Size 100
+Testing Size 1000
+-----------------------
+Epoch 10
+Total Cost: 1549.9343462
+Training Accuracy: 0.328888888889
+Validation Accuracy: 0.26
+-----------------------
+-----------------------
+Epoch 20
+Total Cost: 1332.73542595
+Training Accuracy: 0.422222222222
+Validation Accuracy: 0.2
+-----------------------
+-----------------------
+Epoch 30
+Total Cost: 1144.82370377
+Training Accuracy: 0.525555555556
+Validation Accuracy: 0.23
+-----------------------
+-----------------------
+Epoch 40
+Total Cost: 974.665384769
+Training Accuracy: 0.631111111111
+Validation Accuracy: 0.29
+-----------------------
+-----------------------
+Epoch 50
+Total Cost: 827.310705304
+Training Accuracy: 0.701111111111
+Validation Accuracy: 0.31
+-----------------------
+-----------------------
+Epoch 60
+Total Cost: 695.588317871
+Training Accuracy: 0.737777777778
+Validation Accuracy: 0.33
+-----------------------
+-----------------------
+Epoch 70
+Total Cost: 609.62477684
+Training Accuracy: 0.797777777778
+Validation Accuracy: 0.41
+-----------------------
+-----------------------
+Epoch 80
+Total Cost: 500.604281783
+Training Accuracy: 0.837777777778
+Validation Accuracy: 0.44
+-----------------------
+-----------------------
+Epoch 90
+Total Cost: 438.026302278
+Training Accuracy: 0.863333333333
+Validation Accuracy: 0.45
+-----------------------
+-----------------------
+Epoch 100
+Total Cost: 362.490057647
+Training Accuracy: 0.872222222222
+Validation Accuracy: 0.43
+-----------------------
+-----------------------
+Epoch 110
+Total Cost: 287.860431343
+Training Accuracy: 0.923333333333
+Validation Accuracy: 0.46
+-----------------------
+-----------------------
+Epoch 120
+Total Cost: 269.581936181
+Training Accuracy: 0.928888888889
+Validation Accuracy: 0.45
+-----------------------
+-----------------------
+Epoch 130
+Total Cost: 205.54815653
+Training Accuracy: 0.948888888889
+Validation Accuracy: 0.44
+-----------------------
+-----------------------
+Epoch 140
+Total Cost: 175.407285407
+Training Accuracy: 0.95
+Validation Accuracy: 0.45
+-----------------------
+-----------------------
+Epoch 150
+Total Cost: 161.011948638
+Training Accuracy: 0.942222222222
+Validation Accuracy: 0.44
+-----------------------
+-----------------------
+Epoch 160
+Total Cost: 125.728283942
+Training Accuracy: 0.964444444444
+Validation Accuracy: 0.47
+-----------------------
+-----------------------
+Epoch 170
+Total Cost: 104.7316598
+Training Accuracy: 0.946666666667
+Validation Accuracy: 0.41
+-----------------------
+-----------------------
+Epoch 180
+Total Cost: 80.0721281469
+Training Accuracy: 0.976666666667
+Validation Accuracy: 0.43
+-----------------------
+-----------------------
+Epoch 190
+Total Cost: 103.67248245
+Training Accuracy: 0.977777777778
+Validation Accuracy: 0.46
+-----------------------
+-----------------------
+Epoch 200
+Total Cost: 51.9539674968
+Training Accuracy: 0.991111111111
+Validation Accuracy: 0.47
+-----------------------
+Testing Accuracy: 0.181
