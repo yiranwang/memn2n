@@ -145,7 +145,7 @@ with tf.Session() as sess:
                 acc = metrics.accuracy_score(pred, val_labels[start:end])
                 val_accs.append(acc)
                 
-            average_acc = np.average(acc)
+            average_acc = np.average(val_accs)
             test_accs = []
             if average_acc > best_val_acc:
                 best_val_acc = average_acc
