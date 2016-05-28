@@ -20,14 +20,21 @@ tf.flags.DEFINE_integer("evaluation_interval", 10, "Evaluate and print results e
 tf.flags.DEFINE_integer("batch_size", 32, "Batch size for training.")
 tf.flags.DEFINE_integer("hops", 3, "Number of hops in the Memory Network.")
 tf.flags.DEFINE_integer("epochs", 200, "Number of epochs to train for.")
-tf.flags.DEFINE_integer("embedding_size", 40, "Embedding size for embedding matrices.")
+tf.flags.DEFINE_integer("early", 40, "Number of epochs for early stopping. Should be divisible by evaluation_interval.")
+tf.flags.DEFINE_integer("embedding_size", 50, "Embedding size for embedding matrices.")
 tf.flags.DEFINE_integer("memory_size", 50, "Maximum size of memory.")
 tf.flags.DEFINE_integer("random_state", None, "Random state.")
 tf.flags.DEFINE_string("data_dir", "../code/data/babi/tasks_1-20_v1-2/en/", "Directory containing bAbI tasks")
 tf.flags.DEFINE_string("output_file", "scores.csv", "Name of output file for final bAbI accuracy scores.")
+# TODO add regularization
 FLAGS = tf.flags.FLAGS
 
 print("Started Joint Model")
+print("alpha = {}".format(FLAGS.learning_rate))
+print("hops = {}".format(FLAGS.hops))
+print("early stopping = {}".format(FLAGS.early))
+print("embedding size = {}".format(FLAGS.embedding_size))
+print("memory size = {}".format(FLAGS.memory_size))
 
 # load all train/test data
 ids = range(1, 21)
@@ -101,6 +108,9 @@ optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate, epsilon=FL
 
 # This avoids feeding 1 task after another, instead each batch has a random sampling of tasks
 batches = zip(range(0, n_train-batch_size, batch_size), range(batch_size, n_train, batch_size))
+best_val_acc = 0
+best_val_epoch = -1
+stop_early = False
 with tf.Session() as sess:
     model = MemN2N(batch_size, vocab_size, sentence_size, memory_size, FLAGS.embedding_size, session=sess,
                    hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, optimizer=optimizer)
@@ -133,32 +143,41 @@ with tf.Session() as sess:
                 pred = model.predict(s, q)
                 acc = metrics.accuracy_score(pred, val_labels[start:end])
                 val_accs.append(acc)
-
+                
+            average_acc = np.average(acc)
             test_accs = []
-            for start in range(0, n_test, n_test/20):
-                end = start + n_test/20
-                s = testS[start:end]
-                q = testQ[start:end]
-                pred = model.predict(s, q)
-                acc = metrics.accuracy_score(pred, test_labels[start:end])
-                test_accs.append(acc)
+            if average_acc > best_val_acc:
+                best_val_acc = average_acc
+                best_val_epoch = i
+                for start in range(0, n_test, n_test/20):
+                    end = start + n_test/20
+                    s = testS[start:end]
+                    q = testQ[start:end]
+                    pred = model.predict(s, q)
+                    acc = metrics.accuracy_score(pred, test_labels[start:end])
+                    test_accs.append(acc)
+                accs = zip(train_accs, val_accs, test_accs)
+            else:
+                if i - FLAGS.early >= best_val_epoch:
+                    stop_early = True
+                accs = zip(train_accs, val_accs)
 
             print('-----------------------')
             print('Epoch', i)
             print('Total Cost:', total_cost)
             print()
-            t = 1
-            for t1, t2, t3 in zip(train_accs, val_accs, test_accs):
-                print("Task {}".format(t))
-                print("Training Accuracy = {}".format(t1))
-                print("Validation Accuracy = {}".format(t2))
-                print("Testing Accuracy = {}".format(t3))
+            
+            for t, tup in enumerate(accs):
+                print("Task {}".format(t+1))
+                print("Training Accuracy = {}".format(tup[0]))
+                print("Validation Accuracy = {}".format(tup[1]))
+                if len(tup) > 2:
+                    print("Testing Accuracy = {}".format(tup[2]))
                 print()
-                t += 1
             print('-----------------------')
 
         # Write final results to csv file
-        if i == FLAGS.epochs:
+        if stop_early or i == FLAGS.epochs:
             print('Writing final results to {}'.format(FLAGS.output_file))
             df = pd.DataFrame({
             'Training Accuracy': train_accs,
@@ -167,3 +186,5 @@ with tf.Session() as sess:
             }, index=range(1, 21))
             df.index.name = 'Task'
             df.to_csv(FLAGS.output_file)
+            if stop_early:
+                break
