@@ -126,9 +126,12 @@ with tf.Session() as sess:
             cost_t, cost_t_summary, cost_ema = model.batch_fit(s, q, a)
             total_cost += cost_t
 
+        # zero-indexed
+        # We have achieved SOTA (100) for Task 20, so we can skip it
+        tasks = xrange(0, 19)
         if i % FLAGS.evaluation_interval == 0:
             train_accs = []
-            for start in range(0, n_train, n_train/20):
+            for start in [task * n_train/20 for task in tasks]:
                 end = start + n_train/20
                 s = trainS[start:end]
                 q = trainQ[start:end]
@@ -137,7 +140,7 @@ with tf.Session() as sess:
                 train_accs.append(acc)
 
             val_accs = []
-            for start in range(0, n_val, n_val/20):
+            for start in [task * n_val/20 for task in tasks]:
                 end = start + n_val/20
                 s = valS[start:end]
                 q = valQ[start:end]
@@ -150,7 +153,7 @@ with tf.Session() as sess:
             if average_acc > best_val_acc:
                 best_val_acc = average_acc
                 best_val_epoch = i
-                for start in range(0, n_test, n_test/20):
+                for start in [task * n_test/20 for task in tasks]:
                     end = start + n_test/20
                     s = testS[start:end]
                     q = testQ[start:end]
