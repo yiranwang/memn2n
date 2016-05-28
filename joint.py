@@ -157,6 +157,9 @@ with tf.Session() as sess:
                     acc = metrics.accuracy_score(pred, test_labels[start:end])
                     test_accs.append(acc)
                 accs = zip(train_accs, val_accs, test_accs)
+                best_train_accs = train_accs
+                best_val_accs = val_accs
+                best_test_accs = test_accs
             else:
                 if i - FLAGS.early >= best_val_epoch:
                     stop_early = True
@@ -165,6 +168,7 @@ with tf.Session() as sess:
             print('-----------------------')
             print('Epoch', i)
             print('Total Cost:', total_cost)
+            print('Average Validation Accuracy: {}'.format(average_acc))
             print()
             
             for t, tup in enumerate(accs):
@@ -180,9 +184,9 @@ with tf.Session() as sess:
         if stop_early or i == FLAGS.epochs:
             print('Writing final results to {}'.format(FLAGS.output_file))
             df = pd.DataFrame({
-            'Training Accuracy': train_accs,
-            'Validation Accuracy': val_accs,
-            'Testing Accuracy': test_accs
+            'Training Accuracy': best_train_accs,
+            'Validation Accuracy': best_val_accs,
+            'Testing Accuracy': best_test_accs
             }, index=range(1, 21))
             df.index.name = 'Task'
             df.to_csv(FLAGS.output_file)
