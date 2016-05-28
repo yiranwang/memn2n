@@ -92,7 +92,7 @@ optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate, epsilon=FL
 batches = zip(range(0, n_train-batch_size, batch_size), range(batch_size, n_train, batch_size))
 with tf.Session() as sess:
     model = MemN2N(batch_size, vocab_size, sentence_size, memory_size, FLAGS.embedding_size, session=sess,
-                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, optimizer=optimizer, l2=FLAGS.regularization)
+                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, optimizer=optimizer, l2=FLAGS.regularization, nonlin=tf.nn.relu)
 
     writer = tf.train.SummaryWriter(get_log_dir_name(), sess.graph)
 
