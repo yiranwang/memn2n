@@ -107,7 +107,7 @@ with tf.Session() as sess:
             cost_t, cost_summary, cost_ema = model.batch_fit(s, q, a)
             total_cost += cost_t
 
-            writer.add_summary(cost_summary, t*n_train+start)
+            # writer.add_summary(cost_summary, t*n_train+start)
             writer.add_summary(cost_ema, t*n_train+start)
 
         if t % FLAGS.evaluation_interval == 0:
@@ -121,6 +121,9 @@ with tf.Session() as sess:
 
 #             val_preds = model.predict(valS, valQ)
             train_acc = metrics.accuracy_score(np.array(train_preds), train_labels)
+            total_cost_summary = tf.scalar_summary("epoch_loss", total_cost)
+            tcs = sess.run(total_cost_summary)
+            writer.add_summary(tcs, t)
 #             val_acc = metrics.accuracy_score(val_preds, val_labels)
 
             val_acc, val_acc_summary = model.get_val_acc_summary(valS, valQ, val_labels)

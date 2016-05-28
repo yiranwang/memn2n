@@ -110,8 +110,6 @@ class MemN2N(object):
         self._name = name
         self._l2 = l2
 
-        print(l2)
-
         self._build_inputs()
         self._build_vars()
         self._encoding = tf.constant(encoding(self._sentence_size, self._embedding_size), name="encoding")
@@ -130,7 +128,7 @@ class MemN2N(object):
         ema = tf.train.ExponentialMovingAverage(decay=0.99)
         self.update_loss_ema = ema.apply([loss_op])
         loss_ema = ema.average(loss_op)
-        self.loss_ema_op = tf.scalar_summary('loss_ema', loss_ema)
+        self.loss_ema_op = tf.scalar_summary('batch_loss_ema', loss_ema)
 
         # gradient pipeline
         grads_and_vars = self._opt.compute_gradients(loss_op)
