@@ -146,8 +146,7 @@ batch_size = FLAGS.batch_size
 # This avoids feeding 1 task after another, instead each batch has a random sampling of tasks
 batches = zip(range(0, n_train-batch_size, batch_size), range(batch_size, n_train, batch_size))
 # zero-indexed
-# We have achieved SOTA (100) for Task 20, so we can skip it
-tasks = xrange(0, 19)
+tasks = xrange(0, 20)
 best_test_accs = [-1] * len(tasks)
 best_val_accs = [-1] * len(tasks)
 best_val_epochs = [-1] * len(tasks)
@@ -255,7 +254,7 @@ with tf.Session() as sess:
             'Validation Accuracy': best_val_accs,
             'Testing Accuracy': best_test_accs,
             'Best Epoch': best_val_epochs
-            }, index=range(1, 20))
+            }, index=range(1, 21))
             df.index.name = 'Task'
             df.to_csv(FLAGS.output_file)
             if stop_early:
