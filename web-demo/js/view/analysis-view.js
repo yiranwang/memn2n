@@ -4,6 +4,8 @@ define(['template/analysis-template', 'backbone'], function(analysisTemplate, Ba
         initialize: function () {
             this.setElement("#analysis_container");
             this.render();
+
+            this.listenTo(this.model, "change:story", this._onAnswerClick);
         },
 
         render: function () {
@@ -22,14 +24,11 @@ define(['template/analysis-template', 'backbone'], function(analysisTemplate, Ba
         },
 
         renderSentences: function () {
-            var sentences = ['a', 'b', 'c', 'd'],
+            var sentences = this.model.get('story'),
                 rowTemplate = analysisTemplate[1],
                 self = this;
 
-            var probs =   [[  6.34466469e-01,   9.52042341e-01,   9.86093879e-01],
-                           [  6.83657378e-02,   8.64849426e-03,   2.61654658e-03],
-                           [  1.47958507e-03,   3.54395997e-05,   1.72178170e-06],
-                           [  3.07917828e-03,   1.00669975e-04,   5.96504242e-06]];
+            var probs = this._getProbabilities(sentences.length);
 
             _.each(sentences, function(val, idx) {
                 var prob = probs[idx],
@@ -41,6 +40,27 @@ define(['template/analysis-template', 'backbone'], function(analysisTemplate, Ba
                     });
                 self.$table.append(row);
             });
+        },
+
+        _getProbabilities: function (len) {
+            var probs = [],
+                hops = 3;
+
+            for (i=0; i<len; i++) {
+                var senprob = [];
+                for (j=0; j<hops; j++) {
+                    senprob.push(Math.random());
+                }
+
+                probs.push(senprob);
+            }
+
+            return probs;
+        },
+
+        _onAnswerClick: function () {
+            this.$el.empty();
+            this.renderContent();
         }
     });
 

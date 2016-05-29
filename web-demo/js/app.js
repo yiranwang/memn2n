@@ -2,9 +2,9 @@ define(['backbone', 'model/main-model', 'view/input-view', 'view/result-view', '
 
 	app = window.app = {};
 
-	app.model = new Main();
-	app.inputView = new InputView();
-	app.resultView = new ResultView();
-	app.analysisView = new AnalysisView();
+	var model = app.model = new Main();
+	app.inputView = new InputView({ model: model });
+	app.resultView = new ResultView({ model: model });
+	app.analysisView = new AnalysisView({ model: model });
 
 });
