@@ -210,6 +210,7 @@ class MemN2N(object):
             q_emb = tf.nn.embedding_lookup(self.B, queries)
             u_0 = tf.reduce_sum(q_emb * self._encoding, 1)
             u = [u_0]
+            probs_hops = []
             for _ in range(self._hops):
                 m_emb = tf.nn.embedding_lookup(self.A, stories)
                 m = tf.reduce_sum(m_emb * self._encoding, 2) + self.TA
