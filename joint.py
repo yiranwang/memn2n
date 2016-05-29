@@ -14,9 +14,9 @@ import numpy as np
 import pandas as pd
 import os
 
-tf.flags.DEFINE_float("learning_rate", 0.01, "Learning rate for Adam Optimizer.")
+tf.flags.DEFINE_float("learning_rate", 0.001, "Learning rate for Adam Optimizer.")
 tf.flags.DEFINE_float("epsilon", 1e-8, "Epsilon value for Adam Optimizer.")
-tf.flags.DEFINE_float("regularization", 0.02, "Regularization.")
+tf.flags.DEFINE_float("regularization", 0.0, "Regularization.")
 tf.flags.DEFINE_float("max_grad_norm", 40.0, "Clip gradients to this norm.")
 tf.flags.DEFINE_integer("evaluation_interval", 10, "Evaluate and print results every x epochs")
 tf.flags.DEFINE_integer("batch_size", 32, "Batch size for training.")
@@ -27,7 +27,7 @@ tf.flags.DEFINE_integer("embedding_size", 50, "Embedding size for embedding matr
 tf.flags.DEFINE_integer("memory_size", 50, "Maximum size of memory.")
 tf.flags.DEFINE_integer("random_state", None, "Random state.")
 tf.flags.DEFINE_string("data_dir", "babi/tasks_1-20_v1-2/en/", "Directory containing bAbI tasks")
-tf.flags.DEFINE_string("output_file", "scores.csv", "Name of output file for final bAbI accuracy scores.")
+tf.flags.DEFINE_string("output_file", "scores.alpha_{}.lambda_{}.csv", "Name of output file for final bAbI accuracy scores.")
 FLAGS = tf.flags.FLAGS
 
 print("Started Joint Model")
@@ -248,8 +248,8 @@ with tf.Session() as sess:
         if stop_early or i == FLAGS.epochs:
 
             ### model.save_model(get_wt_dir_name())
-
-            print('Writing final results to {}'.format(FLAGS.output_file))
+            output_file = FLAGS.output_file.format(FLAGS.learning_rate, FLAGS.regularization)
+            print('Writing final results to {}'.format(output_file))
             df = pd.DataFrame({
             'Training Accuracy': best_train_accs,
             'Validation Accuracy': best_val_accs,
@@ -257,6 +257,6 @@ with tf.Session() as sess:
             'Best Epoch': best_val_epochs
             }, index=range(1, 21))
             df.index.name = 'Task'
-            df.to_csv(FLAGS.output_file)
+            df.to_csv(output_file)
             if stop_early:
                 break
