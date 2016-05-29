@@ -57,10 +57,12 @@ class MemN2N(object):
         max_grad_norm=40.0,
         nonlin=None,
         initializer=tf.random_normal_initializer(stddev=0.1),
-        optimizer=tf.train.AdamOptimizer(learning_rate=1e-2),
         encoding=position_encoding,
         session=tf.Session(),
         l2 = 0.02,
+        lr = 0.01,
+        epsilon = 1e-8,
+        restoreLoc = None,
         name='MemN2N'):
         """Creates an End-To-End Memory Network
 
@@ -106,7 +108,7 @@ class MemN2N(object):
         self._max_grad_norm = max_grad_norm
         self._nonlin = nonlin
         self._init = initializer
-        self._opt = optimizer
+        self._opt = tf.train.AdamOptimizer(learning_rate=lr, epsilon=epsilon)
         self._name = name
         self._l2 = l2
 
@@ -162,9 +164,14 @@ class MemN2N(object):
         # Summaries
         self.merged = tf.merge_all_summaries()
 
-        init_op = tf.initialize_all_variables()
         self._sess = session
-        self._sess.run(init_op)
+
+        if restoreLoc is not None:
+            saver = tf.train.Saver()
+            saver.restore(self._sess, restoreLoc)
+        else:
+            init_op = tf.initialize_all_variables()
+            self._sess.run(init_op)
 
 
     def _build_inputs(self):
@@ -174,17 +181,17 @@ class MemN2N(object):
         self._val_answers = tf.placeholder(tf.int32, [None], name="val_answers")
 
     def _build_vars(self):
-        with tf.variable_scope(self._name):
+        with tf.variable_scope(self._name + str(1)):
             nil_word_slot = tf.zeros([1, self._embedding_size])
             A = tf.concat(0, [ nil_word_slot, self._init([self._vocab_size-1, self._embedding_size]) ])
             B = tf.concat(0, [ nil_word_slot, self._init([self._vocab_size-1, self._embedding_size]) ])
-            C = tf.concat(0, [ nil_word_slot, self._init([self._vocab_size-1, self._embedding_size]) ])
+            # C = tf.concat(0, [ nil_word_slot, self._init([self._vocab_size-1, self._embedding_size]) ])
             self.A = tf.Variable(A, name="A")
             self.B = tf.Variable(B, name="B")
-            self.C = tf.Variable(C, name="C")
+            # self.C = tf.Variable(C, name="C")
 
             self.TA = tf.Variable(self._init([self._memory_size, self._embedding_size]), name='TA')
-            self.TC = tf.Variable(self._init([self._memory_size, self._embedding_size]), name='TC')
+            # self.TC = tf.Variable(self._init([self._memory_size, self._embedding_size]), name='TC')
 
             self.H = tf.Variable(self._init([self._embedding_size, self._embedding_size]), name="H")
             self.W = tf.Variable(self._init([self._embedding_size, self._vocab_size]), name="W")
@@ -192,14 +199,14 @@ class MemN2N(object):
 
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.A))
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.B))
-        tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.C))
+        # tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.C))
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.TA))
-        tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.TC))
+        # tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.TC))
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.W))
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.H))
 
     def _inference(self, stories, queries):
-        with tf.variable_scope(self._name):
+        with tf.variable_scope(self._name + str(2)):
             q_emb = tf.nn.embedding_lookup(self.B, queries)
             u_0 = tf.reduce_sum(q_emb * self._encoding, 1)
             u = [u_0]
@@ -215,10 +222,10 @@ class MemN2N(object):
 
                 probs_temp = tf.transpose(tf.expand_dims(probs, -1), [0, 2, 1])
 
-                c_emb = tf.nn.embedding_lookup(self.C, stories)
-                c = tf.reduce_sum(c_emb * self._encoding, 2) + self.TC
+                # c_emb = tf.nn.embedding_lookup(self.C, stories)
+                # c = tf.reduce_sum(c_emb * self._encoding, 2) + self.TC
 
-                c_temp = tf.transpose(c, [0, 2, 1])
+                c_temp = tf.transpose(m, [0, 2, 1])
                 o_k = tf.reduce_sum(c_temp * probs_temp, 2)
 
                 u_k = tf.matmul(u[-1], self.H) + o_k
@@ -229,6 +236,10 @@ class MemN2N(object):
                 u.append(u_k)
 
             return tf.matmul(u_k, self.W)
+
+    def save_model(self, location):
+        saver = tf.train.Saver()
+        saver.save(self._sess, location, write_meta_graph=False)
 
     def _get_val_acc(self, pred_op, val_labels):
         corr_pred = tf.equal(tf.cast(pred_op, tf.int32), val_labels)

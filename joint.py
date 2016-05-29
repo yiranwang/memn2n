@@ -12,6 +12,7 @@ from six.moves import range
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import os
 
 tf.flags.DEFINE_float("learning_rate", 0.01, "Learning rate for Adam Optimizer.")
 tf.flags.DEFINE_float("epsilon", 1e-8, "Epsilon value for Adam Optimizer.")
@@ -25,7 +26,7 @@ tf.flags.DEFINE_integer("early", 40, "Number of epochs for early stopping. Shoul
 tf.flags.DEFINE_integer("embedding_size", 50, "Embedding size for embedding matrices.")
 tf.flags.DEFINE_integer("memory_size", 50, "Maximum size of memory.")
 tf.flags.DEFINE_integer("random_state", None, "Random state.")
-tf.flags.DEFINE_string("data_dir", "../code/data/babi/tasks_1-20_v1-2/en/", "Directory containing bAbI tasks")
+tf.flags.DEFINE_string("data_dir", "babi/tasks_1-20_v1-2/en/", "Directory containing bAbI tasks")
 tf.flags.DEFINE_string("output_file", "scores.csv", "Name of output file for final bAbI accuracy scores.")
 FLAGS = tf.flags.FLAGS
 
@@ -45,6 +46,41 @@ for i in ids:
     train.append(tr)
     test.append(te)
 data = list(chain.from_iterable(train + test))
+
+def get_log_dir_name():
+    lr = FLAGS.learning_rate
+    eps = FLAGS.epsilon
+    mgn = FLAGS.max_grad_norm
+    hp = FLAGS.hops
+    es = FLAGS.embedding_size
+    ms = FLAGS.memory_size
+    # ti = FLAGS.task_id
+    reg = FLAGS.regularization
+
+    log_dir_name = "lr={0}_eps={1}_mgn={2}_hp={3}_es={4}_ms={5}_reg={6}".format(lr, eps, mgn, hp, es, ms, reg)
+    return os.path.join('./logs/joint/', log_dir_name)
+
+def get_wt_dir_name():
+    lr = FLAGS.learning_rate
+    eps = FLAGS.epsilon
+    mgn = FLAGS.max_grad_norm
+    hp = FLAGS.hops
+    es = FLAGS.embedding_size
+    ms = FLAGS.memory_size
+    # ti = FLAGS.task_id
+    reg = FLAGS.regularization
+
+    log_dir_name = "lr={0}_eps={1}_mgn={2}_hp={3}_es={4}_ms={5}_reg={6}".format(lr, eps, mgn, hp, es, ms, reg)
+    return os.path.join('./weights', log_dir_name)
+
+def gen_writers(sess, base_dir):
+    writers = {}
+    writers["loss"] = tf.train.SummaryWriter(os.path.join(base_dir, "loss") , sess.graph)
+
+    for i in range(1, 21):
+        writers["task{0}".format(i)] = tf.train.SummaryWriter(os.path.join(base_dir, "task{0}".format(i)), sess.graph)
+
+    return writers
 
 vocab = sorted(reduce(lambda x, y: x | y, (set(list(chain.from_iterable(s)) + q + a) for s, q, a in data)))
 word_idx = dict((c, i + 1) for i, c in enumerate(vocab))
@@ -105,7 +141,7 @@ val_labels = np.argmax(valA, axis=1)
 
 tf.set_random_seed(FLAGS.random_state)
 batch_size = FLAGS.batch_size
-optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate, epsilon=FLAGS.epsilon)
+# optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate, epsilon=FLAGS.epsilon)
 
 # This avoids feeding 1 task after another, instead each batch has a random sampling of tasks
 batches = zip(range(0, n_train-batch_size, batch_size), range(batch_size, n_train, batch_size))
@@ -117,9 +153,15 @@ best_val_accs = [-1] * len(tasks)
 best_val_epochs = [-1] * len(tasks)
 best_val_update_epoch = -1
 stop_early = False
+best_train_accs = []
 with tf.Session() as sess:
+    print(batch_size, vocab_size, sentence_size, memory_size, FLAGS.embedding_size, FLAGS.hops, FLAGS.max_grad_norm, FLAGS.regularization, FLAGS.learning_rate, FLAGS.epsilon)
+
     model = MemN2N(batch_size, vocab_size, sentence_size, memory_size, FLAGS.embedding_size, session=sess,
-                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, optimizer=optimizer, l2=FLAGS.regularization, nonlin=tf.nn.relu)
+                   hops=FLAGS.hops, max_grad_norm=FLAGS.max_grad_norm, l2=FLAGS.regularization, lr=FLAGS.learning_rate, epsilon=FLAGS.epsilon, nonlin=tf.nn.relu)
+
+    writers = gen_writers(sess, get_log_dir_name())
+
     for i in range(1, FLAGS.epochs+1):
         np.random.shuffle(batches)
         total_cost = 0.0
@@ -131,6 +173,10 @@ with tf.Session() as sess:
             cost_t, cost_t_summary, cost_ema = model.batch_fit(s, q, a)
             total_cost += cost_t
 
+        total_cost_summary = tf.scalar_summary("epoch_loss", total_cost)
+        tcs = sess.run(total_cost_summary)
+        writers["loss"].add_summary(tcs, i)
+
         if i % FLAGS.evaluation_interval == 0:
             train_accs = []
             for start in [task * n_train/20 for task in tasks]:
@@ -140,7 +186,6 @@ with tf.Session() as sess:
                 pred = model.predict(s, q)
                 acc = metrics.accuracy_score(pred, train_labels[start:end])
                 train_accs.append(acc)
-
             val_accs = []
             for task in tasks:
                 start = task * n_val/20
@@ -150,6 +195,7 @@ with tf.Session() as sess:
                 pred = model.predict(s, q)
                 acc = metrics.accuracy_score(pred, val_labels[start:end])
                 val_accs.append(acc)
+
                 if acc > best_val_accs[task]:
                     best_val_accs[task] = acc
                     best_val_epochs[task] = i
@@ -179,7 +225,7 @@ with tf.Session() as sess:
             print('Total Cost:', total_cost)
             print('Average Validation Accuracy: {}'.format(average_acc))
             print()
-            
+
             for t, tup in enumerate(accs):
                 print("Task {}".format(t+1))
                 print("Training Accuracy = {}".format(tup[0]))
@@ -187,10 +233,22 @@ with tf.Session() as sess:
                 if len(tup) > 2:
                     print("Testing Accuracy = {}".format(tup[2]))
                 print()
+
+                train_acc_summary = tf.scalar_summary("train_acc", tup[0])
+                val_acc_summary = tf.scalar_summary("val_acc", tup[1])
+
+                vas = sess.run(val_acc_summary)
+                tas = sess.run(train_acc_summary)
+
+                writers["task{0}".format(t)].add_summary(vas, i)
+                writers["task{0}".format(t)].add_summary(tas, i)
             print('-----------------------')
 
-        # Write final results to csv file
+        # Write final results to csv file and save model
         if stop_early or i == FLAGS.epochs:
+
+            model.save_model(get_wt_dir_name())
+
             print('Writing final results to {}'.format(FLAGS.output_file))
             df = pd.DataFrame({
             'Training Accuracy': best_train_accs,
