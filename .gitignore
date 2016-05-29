@@ -15,3 +15,9 @@ data
 /babi/
 
 /MemN2N.ipynb
+
+.DS_Store
+
+/web-demo/.DS_Store
+
+/web-demo/js/lib/.DS_Store
