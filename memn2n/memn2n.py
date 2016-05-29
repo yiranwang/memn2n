@@ -195,7 +195,7 @@ class MemN2N(object):
 
             self.H = tf.Variable(self._init([self._embedding_size, self._embedding_size]), name="H")
             self.W = tf.Variable(self._init([self._embedding_size, self._vocab_size]), name="W")
-        self._nil_vars = set([self.A.name, self.B.name])
+        self._nil_vars = set([self.A.name, self.B.name, self.C.name])
 
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.A))
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.B))
