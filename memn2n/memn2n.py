@@ -186,9 +186,14 @@ class MemN2N(object):
             A = tf.concat(0, [ nil_word_slot, self._init([self._vocab_size-1, self._embedding_size]) ])
             B = tf.concat(0, [ nil_word_slot, self._init([self._vocab_size-1, self._embedding_size]) ])
             C = tf.concat(0, [ nil_word_slot, self._init([self._vocab_size-1, self._embedding_size]) ])
+            D = np.random.randn(self._sentence_size)
+
+            print (D)
+
             self.A = tf.Variable(A, name="A")
             self.B = tf.Variable(B, name="B")
             self.C = tf.Variable(C, name="C")
+            self.D = tf.Variable(D, name="D", dtype=tf.float32)
 
             self.TA = tf.Variable(self._init([self._memory_size, self._embedding_size]), name='TA')
             self.TC = tf.Variable(self._init([self._memory_size, self._embedding_size]), name='TC')
@@ -200,6 +205,7 @@ class MemN2N(object):
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.A))
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.B))
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.C))
+        tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.D))
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.TA))
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.TC))
         tf.add_to_collection('reg_loss', tf.nn.l2_loss(self.W))
@@ -213,7 +219,12 @@ class MemN2N(object):
             self.probs_hops = []
             for _ in range(self._hops):
                 m_emb = tf.nn.embedding_lookup(self.A, stories)
-                m = tf.reduce_sum(m_emb * self._encoding, 2) + self.TA
+
+                m_emb_1 = tf.transpose(m_emb, [0, 1, 3, 2])
+                m_emb_1 = m_emb_1 * self.D
+                m_emb_1 = tf.transpose(m_emb_1, [0, 1, 3, 2])
+
+                m = tf.reduce_sum(m_emb_1, 2) + self.TA
                 # hack to get around no reduce_dot
                 u_temp = tf.transpose(tf.expand_dims(u[-1], -1), [0, 2, 1])
                 dotted = tf.reduce_sum(m * u_temp, 2)
@@ -225,7 +236,12 @@ class MemN2N(object):
                 probs_temp = tf.transpose(tf.expand_dims(probs, -1), [0, 2, 1])
 
                 c_emb = tf.nn.embedding_lookup(self.C, stories)
-                c = tf.reduce_sum(c_emb * self._encoding, 2) + self.TC
+
+                c_emb_1 = tf.transpose(c_emb, [0, 1, 3, 2])
+                c_emb_1 = c_emb_1 * self.D
+                c_emb_1 = tf.transpose(c_emb_1, [0, 1, 3, 2])
+
+                c = tf.reduce_sum(c_emb_1, 2) + self.TC
 
                 c_temp = tf.transpose(c, [0, 2, 1])
                 o_k = tf.reduce_sum(c_temp * probs_temp, 2)
