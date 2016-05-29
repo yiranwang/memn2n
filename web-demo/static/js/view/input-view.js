@@ -24,12 +24,13 @@ define(['template/input-template', 'backbone'], function(inputTemplate, Backbone
                 question = this.$question.val().trim(),
                 sentences = [];
 
-            if (!story || !question)
-                return;
-
             sentences = story.split('\n');
 
             this.model.set("story", sentences);
+            this.model.set("question", question);
+
+            if (!!story && !!question)
+                this.model.getAnswer();
         }
     });
 

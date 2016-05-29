@@ -5,7 +5,7 @@ define(['template/analysis-template', 'backbone'], function(analysisTemplate, Ba
             this.setElement("#analysis_container");
             this.render();
 
-            this.listenTo(this.model, "change:story", this._onAnswerClick);
+            this.listenTo(this.model, "change:answer", this._onAnswer);
         },
 
         render: function () {
@@ -28,7 +28,7 @@ define(['template/analysis-template', 'backbone'], function(analysisTemplate, Ba
                 rowTemplate = analysisTemplate[1],
                 self = this;
 
-            var probs = this._getProbabilities(sentences.length);
+            var probs = this.model.get('memoryProbabilities');
 
             _.each(sentences, function(val, idx) {
                 var prob = probs[idx],
@@ -58,7 +58,7 @@ define(['template/analysis-template', 'backbone'], function(analysisTemplate, Ba
             return probs;
         },
 
-        _onAnswerClick: function () {
+        _onAnswer: function () {
             this.$el.empty();
             this.renderContent();
         }

@@ -1,0 +1,35 @@
+define(["backbone"], function(Backbone) {
+    var Main = Backbone.Model.extend({
+
+        defaults: {
+            "hop": 1,
+            "story": [],
+            "question": "",
+            "answer": "",
+            "correctAnswer": "",
+            "answerProbability": 0,
+            "memoryProbabilities": []
+        },
+
+        getAnswer: function () {
+            var data = {
+                "sentences": this.get("story"),
+                "question": this.get("question")
+            };
+
+            $.post('answer', {
+                'data': JSON.stringify(data)
+            })
+            .then(_.bind(function (resp) {
+                this.set({
+                    "answer": resp.answer,
+                    "answerProbability": resp.answerProbability,
+                    "memoryProbabilities": resp.memoryProbabilities
+                });
+            }, this));
+        }
+
+    });
+
+    return Main;
+});
