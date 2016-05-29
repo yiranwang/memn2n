@@ -238,15 +238,16 @@ with tf.Session() as sess:
 
                 vas = sess.run(val_acc_summary)
                 tas = sess.run(train_acc_summary)
-
+                '''
                 writers["task{0}".format(t)].add_summary(vas, i)
                 writers["task{0}".format(t)].add_summary(tas, i)
+                '''
             print('-----------------------')
 
         # Write final results to csv file and save model
         if stop_early or i == FLAGS.epochs:
 
-            model.save_model(get_wt_dir_name())
+            ### model.save_model(get_wt_dir_name())
 
             print('Writing final results to {}'.format(FLAGS.output_file))
             df = pd.DataFrame({
