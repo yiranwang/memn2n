@@ -212,7 +212,7 @@ with tf.Session() as sess:
             if best_val_update_epoch == i:
                 # something was updated in this epoch
                 new_test_bests = [test_acc if best_val_epochs[task] == i else "unchanged" for task, test_acc in enumerate(best_test_accs)]
-                accs = zip(train_accs, val_accs, best_test_accs)
+                accs = zip(train_accs, val_accs, new_test_bests)
                 best_train_accs = train_accs
             else:
                 if i - FLAGS.early >= best_val_update_epoch:
