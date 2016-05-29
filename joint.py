@@ -109,8 +109,13 @@ optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate, epsilon=FL
 
 # This avoids feeding 1 task after another, instead each batch has a random sampling of tasks
 batches = zip(range(0, n_train-batch_size, batch_size), range(batch_size, n_train, batch_size))
-best_val_acc = 0
-best_val_epoch = -1
+# zero-indexed
+# We have achieved SOTA (100) for Task 20, so we can skip it
+tasks = xrange(0, 19)
+best_test_accs = [-1] * len(tasks)
+best_val_accs = [-1] * len(tasks)
+best_val_epochs = [-1] * len(tasks)
+best_val_update_epoch = -1
 stop_early = False
 with tf.Session() as sess:
     model = MemN2N(batch_size, vocab_size, sentence_size, memory_size, FLAGS.embedding_size, session=sess,
@@ -126,9 +131,6 @@ with tf.Session() as sess:
             cost_t, cost_t_summary, cost_ema = model.batch_fit(s, q, a)
             total_cost += cost_t
 
-        # zero-indexed
-        # We have achieved SOTA (100) for Task 20, so we can skip it
-        tasks = xrange(0, 19)
         if i % FLAGS.evaluation_interval == 0:
             train_accs = []
             for start in [task * n_train/20 for task in tasks]:
@@ -140,32 +142,35 @@ with tf.Session() as sess:
                 train_accs.append(acc)
 
             val_accs = []
-            for start in [task * n_val/20 for task in tasks]:
+            for task in tasks:
+                start = task * n_val/20
                 end = start + n_val/20
                 s = valS[start:end]
                 q = valQ[start:end]
                 pred = model.predict(s, q)
                 acc = metrics.accuracy_score(pred, val_labels[start:end])
                 val_accs.append(acc)
-                
-            average_acc = np.average(val_accs)
-            test_accs = []
-            if average_acc > best_val_acc:
-                best_val_acc = average_acc
-                best_val_epoch = i
-                for start in [task * n_test/20 for task in tasks]:
+                if acc > best_val_accs[task]:
+                    best_val_accs[task] = acc
+                    best_val_epochs[task] = i
+                    best_val_update_epoch = i
+                    # test predictions for this task
+                    start = task * n_test/20
                     end = start + n_test/20
                     s = testS[start:end]
                     q = testQ[start:end]
                     pred = model.predict(s, q)
                     acc = metrics.accuracy_score(pred, test_labels[start:end])
-                    test_accs.append(acc)
-                accs = zip(train_accs, val_accs, test_accs)
+                    best_test_accs[task] = acc
+                
+            average_acc = np.average(val_accs)
+            if best_val_update_epoch == i:
+                # something was updated in this epoch
+                new_test_bests = [test_acc if best_val_epochs[task] == i else "unchanged" for task, test_acc in enumerate(best_test_accs)]
+                accs = zip(train_accs, val_accs, best_test_accs)
                 best_train_accs = train_accs
-                best_val_accs = val_accs
-                best_test_accs = test_accs
             else:
-                if i - FLAGS.early >= best_val_epoch:
+                if i - FLAGS.early >= best_val_update_epoch:
                     stop_early = True
                 accs = zip(train_accs, val_accs)
 
@@ -190,8 +195,9 @@ with tf.Session() as sess:
             df = pd.DataFrame({
             'Training Accuracy': best_train_accs,
             'Validation Accuracy': best_val_accs,
-            'Testing Accuracy': best_test_accs
-            }, index=range(1, 21))
+            'Testing Accuracy': best_test_accs,
+            'Best Epoch': best_val_epochs
+            }, index=range(1, 20))
             df.index.name = 'Task'
             df.to_csv(FLAGS.output_file)
             if stop_early:
