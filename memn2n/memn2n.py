@@ -210,7 +210,7 @@ class MemN2N(object):
             q_emb = tf.nn.embedding_lookup(self.B, queries)
             u_0 = tf.reduce_sum(q_emb * self._encoding, 1)
             u = [u_0]
-            probs_hops = []
+            self.probs_hops = []
             for _ in range(self._hops):
                 m_emb = tf.nn.embedding_lookup(self.A, stories)
                 m = tf.reduce_sum(m_emb * self._encoding, 2) + self.TA
@@ -220,6 +220,7 @@ class MemN2N(object):
 
                 # Calculate probabilities
                 probs = tf.nn.softmax(dotted)
+                self.probs_hops.append(probs)
 
                 probs_temp = tf.transpose(tf.expand_dims(probs, -1), [0, 2, 1])
 
@@ -274,6 +275,22 @@ class MemN2N(object):
         """
         feed_dict = {self._stories: stories, self._queries: queries}
         return self._sess.run(self.predict_op, feed_dict=feed_dict)
+
+    def predict_test(self, stories, queries):
+        """Predicts answers as one-hot encoding.
+
+        Args:
+            stories: Tensor (None, memory_size, sentence_size)
+            queries: Tensor (None, sentence_size)
+
+        Returns:
+            answers, probabilities per hop: Tensor (None, vocab_size), Tensor (None, hops, memory_size)
+        """
+        feed_dict = {self._stories: stories, self._queries: queries}
+        ops = [self.predict_op]
+        ops.extend(self.probs_hops)
+
+        return self._sess.run(ops, feed_dict=feed_dict)
 
     def predict_proba(self, stories, queries):
         """Predicts probabilities of answers.
