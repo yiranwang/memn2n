@@ -1,6 +1,6 @@
 from memn2n import MemN2N
 import tensorflow as tf
-
+import numpy as np
 import os
 
 
@@ -59,4 +59,9 @@ model = MemN2N(config["batch"],
 
 def get_pred(testS, testQ):
     ps = model.predict_proba(testS, testQ)
-    return ps
+    op = model.predict_test(testS, testQ)
+
+    answer = op[0][0]
+    answer_probability = float(np.max(ps))
+    mem_probs = np.vstack(op[1:]).T[testS[0].any(axis=1)]
+    return answer, answer_probability, mem_probs

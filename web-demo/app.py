@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import numpy as np
 import json
 
-from server.data_utils import process_data
+from server.data_utils import process_data, decode
 from server.model_helper import get_pred
 
 app = Flask(__name__, static_url_path='')
@@ -30,13 +30,13 @@ def get_answer():
     question = data['question']
 
     testS, testQ, testA = process_data(sentences, question)
-    ps = get_pred(testS, testQ)
+    answer, answer_probability, mem_probs = get_pred(testS, testQ)
 
-    memory_probabilities = np.round(np.random.uniform(0, 1, (len(sentences), 3)), 4)
+    memory_probabilities = np.round(mem_probs, 4)
 
     response = {
-        "answer": "test" + str(np.random.randint(100)),
-        "answerProbability": round(np.random.uniform(), 3),
+        "answer": decode(answer),
+        "answerProbability": answer_probability,
         "memoryProbabilities": memory_probabilities.tolist()
     }
 

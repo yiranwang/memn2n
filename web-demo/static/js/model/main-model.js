@@ -26,6 +26,8 @@ define(["backbone"], function(Backbone) {
                     "answerProbability": resp.answerProbability,
                     "memoryProbabilities": resp.memoryProbabilities
                 });
+
+                this.trigger('change:answer');
             }, this));
         }
 

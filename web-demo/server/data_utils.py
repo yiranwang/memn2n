@@ -6,6 +6,7 @@ import pickle
 with open('server/model/vocab_data.pickle', 'rb') as handle:
   vocab_data = pickle.load(handle)
 
+decode_dict = {v:k for k,v in vocab_data['w_idx'].iteritems()}
 
 def tokenize(sent):
     '''Return the tokens of a sentence including punctuation.
@@ -54,6 +55,10 @@ def vectorize_data(data, word_idx, sentence_size, memory_size):
         Q.append(q)
         A.append(y)
     return np.array(S), np.array(Q), np.array(A)
+
+
+def decode(index):
+    return decode_dict.get(index, 'unknown')
 
 
 def process_data(sentences, question):
