@@ -50,7 +50,7 @@ model = MemN2N(config["batch"],
                l2=config["regularization"],
                lr=config["lr"],
                epsilon=config["epsilon"],
-               nonlin=tf.nn.relu,
+               nonlin=None,
                restoreLoc=restore_location)
 
 
