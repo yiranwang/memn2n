@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
 import numpy as np
-import os, json
-# set the project root directory as the static folder, you can set others.
-root = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-print root
+import json
+
+from server.data_utils import process_data
+from server.model_helper import get_pred
 
 app = Flask(__name__, static_url_path='')
 
@@ -28,6 +28,9 @@ def get_answer():
     data = json.loads(request.form['data'])
     sentences = data['sentences']
     question = data['question']
+
+    testS, testQ, testA = process_data(sentences, question)
+    ps = get_pred(testS, testQ)
 
     memory_probabilities = np.round(np.random.uniform(0, 1, (len(sentences), 3)), 4)
 
