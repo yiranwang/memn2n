@@ -7,7 +7,8 @@ define([], function() {
             '<h3>Question</h3>' +
             '<input type="text" class="question-text form-control" placeholder="Question" />' +
             '<br/>'+
-            '<button class="btn btn-primary">Answer</button>' +
+            '<button class="btn btn-primary btn-answer">Answer</button>' +
+            '<div class="story-load-btn">Answer</div>' +
         '</div>' +
     '</div>';
 });

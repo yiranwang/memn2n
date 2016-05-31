@@ -13,3 +13,23 @@
 .progress-bar {
     color: black;
 }
+
+.story-load-btn {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.modal-body-content {
+    overflow-y: scroll;
+    height: 750px;
+}
+
+.modal-body-content .well {
+    height: 250px;
+    overflow-y: scroll;
+}
+
+.modal-body-content h4 {
+    display: inline-block;
+    margin-right: 10px;
+}

@@ -30,8 +30,10 @@ define(['template/analysis-template', 'backbone', 'view/analysis-view-word'], fu
         renderSentences: function () {
             var sentences = this.model.get('story'),
                 rowTemplate = analysisTemplate[1],
+                headerTemplate = _.template(analysisTemplate[2]),
                 self = this;
 
+            this.$table.append(headerTemplate);
             var probs = this.model.get('memoryProbabilities');
 
             _.each(sentences, function(val, idx) {
