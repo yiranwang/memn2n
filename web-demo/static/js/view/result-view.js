@@ -1,6 +1,6 @@
 define(['template/result-template', 'backbone'], function(resultTemplate, Backbone) {
 
-    ResultView = Backbone.View.extend({
+    var ResultView = Backbone.View.extend({
         initialize: function() {
             this.setElement("#result_container");
             this.render();

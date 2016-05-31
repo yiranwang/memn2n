@@ -3,7 +3,8 @@ requirejs.config({
     paths: {
         "jquery": "lib/jquery/jquery",
         "underscore": "lib/underscore/underscore",
-        "backbone": "lib/backbone/backbone"
+        "backbone": "lib/backbone/backbone",
+        "jquery-ui": "lib/jquery-ui.min"
     },
     shim: {
         "underscore": {

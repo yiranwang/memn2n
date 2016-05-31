@@ -1,6 +1,6 @@
 define(['template/input-template', 'backbone'], function(inputTemplate, Backbone) {
 
-    InputView = Backbone.View.extend({
+   var  InputView = Backbone.View.extend({
 
         events: {
             'click .btn': '_onAnswerClick'
@@ -29,8 +29,10 @@ define(['template/input-template', 'backbone'], function(inputTemplate, Backbone
             this.model.set("story", sentences);
             this.model.set("question", question);
 
-            if (!!story && !!question)
+            if (!!story && !!question) {
                 this.model.getAnswer();
+            }
+
         }
     });
 

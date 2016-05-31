@@ -1,4 +1,5 @@
-define(['backbone', 'model/main-model', 'view/input-view', 'view/result-view', 'view/analysis-view'], function(Backbone, Main, InputView, ResultView, AnalysisView) {
+define(['backbone', 'model/main-model', 'view/input-view',
+				 'view/result-view', 'view/analysis-view'], function(Backbone, Main, InputView, ResultView, AnalysisView) {
 
 	app = window.app = {};
 

@@ -1,3 +1,7 @@
+@import "jquery-ui.min.css";
+@import "jquery-ui.structure.css";
+@import "jquery-ui.theme.css";
+
 .heading {
     text-align: center;
 }

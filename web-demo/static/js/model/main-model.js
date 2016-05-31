@@ -2,7 +2,7 @@ define(["backbone"], function(Backbone) {
     var Main = Backbone.Model.extend({
 
         defaults: {
-            "hop": 1,
+            "hop": 0,
             "story": [],
             "question": "",
             "answer": "",
@@ -21,6 +21,8 @@ define(["backbone"], function(Backbone) {
                 'data': JSON.stringify(data)
             })
             .then(_.bind(function (resp) {
+                this.set("hop", 0, {"silent": true});
+
                 this.set({
                     "answer": resp.answer,
                     "answerProbability": resp.answerProbability,

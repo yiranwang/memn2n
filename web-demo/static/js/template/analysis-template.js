@@ -3,7 +3,7 @@ define([], function() {
     return [
         '<div class="col-md-6">' +
             '<div class="form-group jumbotron">' +
-                '<table class="table">' +
+                '<table class="hop-table table">' +
                     '<tr>' +
                         '<th>Sentence</th>' +
                         '<th>Hop 1</th>' +

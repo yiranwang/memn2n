@@ -1,6 +1,6 @@
-define(['template/analysis-template', 'backbone'], function(analysisTemplate, Backbone) {
+define(['template/analysis-template', 'backbone', 'view/analysis-view-word'], function(analysisTemplate, Backbone, AnalysisWordView) {
 
-    AnalysisView = Backbone.View.extend({
+    var AnalysisView = Backbone.View.extend({
         initialize: function () {
             this.setElement("#analysis_container");
             this.render();
@@ -9,16 +9,20 @@ define(['template/analysis-template', 'backbone'], function(analysisTemplate, Ba
         },
 
         render: function () {
-            this.renderContent();
-
-            return this
-        },
-
-        renderContent: function () {
             var template = _.template(analysisTemplate[0]);
             this.$el.html(template);
 
-            this.$table = this.$el.find(".table");
+            this.renderContent();
+
+            this.$wordView = new AnalysisWordView({ model: this.model }).render().$el;
+            this.$root.append(this.$wordView);
+
+            return this;
+        },
+
+        renderContent: function () {
+            this.$root = this.$el.find(".col-md-6");
+            this.$table = this.$el.find(".hop-table");
 
             this.renderSentences();
         },
@@ -34,32 +38,16 @@ define(['template/analysis-template', 'backbone'], function(analysisTemplate, Ba
                 var prob = probs[idx],
                     row = _.template(rowTemplate, {
                         "sentence": val,
-                        "perc1": prob[0],
-                        "perc2": prob[1],
-                        "perc3": prob[2]
+                        "perc1": prob[0].toFixed(3),
+                        "perc2": prob[1].toFixed(3),
+                        "perc3": prob[2].toFixed(3)
                     });
                 self.$table.append(row);
             });
         },
 
-        _getProbabilities: function (len) {
-            var probs = [],
-                hops = 3;
-
-            for (i=0; i<len; i++) {
-                var senprob = [];
-                for (j=0; j<hops; j++) {
-                    senprob.push(Math.random());
-                }
-
-                probs.push(senprob);
-            }
-
-            return probs;
-        },
-
         _onAnswer: function () {
-            this.$el.empty();
+            this.$table.empty();
             this.renderContent();
         }
     });
