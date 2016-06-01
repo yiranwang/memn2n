@@ -23,9 +23,14 @@
 .modal-body-content .well {
     height: 250px;
     overflow-y: scroll;
+    margin-bottom: 0px;
 }
 
-.modal-body-content h4 {
+.modal-body-content h5 {
     display: inline-block;
     margin-right: 10px;
+}
+
+.modal-body-content .thumbnail {
+    height: 410px;
 }
