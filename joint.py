@@ -13,16 +13,17 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 import os
+import pickle
 
 tf.flags.DEFINE_float("learning_rate", 0.001, "Learning rate for Adam Optimizer.")
 tf.flags.DEFINE_float("epsilon", 1e-8, "Epsilon value for Adam Optimizer.")
-tf.flags.DEFINE_float("regularization", 0.0, "Regularization.")
+tf.flags.DEFINE_float("regularization", 1e-5, "Regularization.")
 tf.flags.DEFINE_float("max_grad_norm", 40.0, "Clip gradients to this norm.")
 tf.flags.DEFINE_integer("evaluation_interval", 10, "Evaluate and print results every x epochs")
 tf.flags.DEFINE_integer("batch_size", 32, "Batch size for training.")
 tf.flags.DEFINE_integer("hops", 3, "Number of hops in the Memory Network.")
 tf.flags.DEFINE_integer("epochs", 200, "Number of epochs to train for.")
-tf.flags.DEFINE_integer("early", 40, "Number of epochs for early stopping. Should be divisible by evaluation_interval.")
+tf.flags.DEFINE_integer("early", 50, "Number of epochs for early stopping. Should be divisible by evaluation_interval.")
 tf.flags.DEFINE_integer("embedding_size", 50, "Embedding size for embedding matrices.")
 tf.flags.DEFINE_integer("memory_size", 50, "Maximum size of memory.")
 tf.flags.DEFINE_integer("random_state", None, "Random state.")
@@ -93,6 +94,7 @@ memory_size = min(FLAGS.memory_size, max_story_size)
 vocab_size = len(word_idx) + 1 # +1 for nil word
 sentence_size = max(query_size, sentence_size) # for the position
 
+print("Vocab length", vocab_size)
 print("Longest sentence length", sentence_size)
 print("Longest story length", max_story_size)
 print("Average story length", mean_story_size)
@@ -207,7 +209,7 @@ with tf.Session() as sess:
                     pred = model.predict(s, q)
                     acc = metrics.accuracy_score(pred, test_labels[start:end])
                     best_test_accs[task] = acc
-                
+
             average_acc = np.average(val_accs)
             if best_val_update_epoch == i:
                 # something was updated in this epoch
@@ -238,16 +240,21 @@ with tf.Session() as sess:
 
                 vas = sess.run(val_acc_summary)
                 tas = sess.run(train_acc_summary)
-                '''
-                writers["task{0}".format(t)].add_summary(vas, i)
-                writers["task{0}".format(t)].add_summary(tas, i)
-                '''
+
+                writers["task{0}".format(t+1)].add_summary(vas, i)
+                writers["task{0}".format(t+1)].add_summary(tas, i)
+
             print('-----------------------')
 
         # Write final results to csv file and save model
         if stop_early or i == FLAGS.epochs:
 
-            ### model.save_model(get_wt_dir_name())
+            # save model data
+            model.save_model(get_wt_dir_name())
+            res = {'vocab': vocab, 'w_idx': word_idx, 'sentence_size': sentence_size, 'memory_size': memory_size}
+            with open('./weights/vocab_data.pickle', 'wb') as fl:
+              pickle.dump(res, fl)
+
             output_file = FLAGS.output_file.format(FLAGS.learning_rate, FLAGS.regularization)
             print('Writing final results to {}'.format(output_file))
             df = pd.DataFrame({

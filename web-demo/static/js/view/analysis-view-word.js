@@ -1,6 +1,6 @@
 define(['template/analysis-word-template', 'backbone', 'jquery-ui'], function(analysisWordTemplate, Backbone, slider) {
 
-    var MAX_SENTENCE_LENGTH = 6,
+    var MAX_SENTENCE_LENGTH = 11,
       MAX_HOPS = 3,
       WORD_IMPORTANCE_VECTOR = [0.06061461,  0.04120471,  0.14728905,  0.22691217,  0.04447887, 0.47950059];
 
@@ -14,15 +14,8 @@ define(['template/analysis-word-template', 'backbone', 'jquery-ui'], function(an
         },
 
         render: function () {
-            this.renderContent();
-
-            return this;
-        },
-
-        renderContent: function () {
             var template = _.template(analysisWordTemplate[0]),
-                self = this;
-
+              self = this;
             this.$el.html(template);
 
             this.$table = this.$el.find(".table");
@@ -30,13 +23,24 @@ define(['template/analysis-word-template', 'backbone', 'jquery-ui'], function(an
 
             this.$slider.slider({
               min: 0,
+              value: 0,
               max: MAX_HOPS - 1,
               change: function (event, ui) {
                 self.model.set("hop", ui.value);
               }
             });
 
+            this.renderContent();
+
+            return this;
+        },
+
+        renderContent: function () {
             this.renderSentences();
+
+            this.$slider.slider({
+              value: 0
+            });
         },
 
         renderSentences: function () {
@@ -45,6 +49,9 @@ define(['template/analysis-word-template', 'backbone', 'jquery-ui'], function(an
                 self = this;
 
             var probs = this.model.get('memoryProbabilities');
+
+            if (probs.length === 0)
+                return;
 
           _.each(sentences, function(val, idx) {
             var words = val.split(' '),
@@ -77,7 +84,7 @@ define(['template/analysis-word-template', 'backbone', 'jquery-ui'], function(an
         },
 
         _onAnswer: function () {
-            this.$el.empty();
+            this.$table.empty();
             this.renderContent();
         }
     });

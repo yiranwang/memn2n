@@ -1,6 +1,6 @@
 define([], function() {
 
-    return '<button type="button" class="btn btn-warning" data-toggle="modal" data-target="#myModal">Load a story</button>' +
+    return '<button type="button" class="btn btn-warning" data-toggle="modal" data-target="#myModal">Load</button>' +
 
             '<!-- Modal -->' +
             '<div id="myModal" class="modal fade" role="dialog">' +

@@ -2,7 +2,6 @@ define(['template/analysis-template', 'backbone', 'view/analysis-view-word'], fu
 
     var AnalysisView = Backbone.View.extend({
         initialize: function () {
-            this.setElement("#analysis_container");
             this.render();
 
             this.listenTo(this.model, "change:answer", this._onAnswer);
@@ -14,14 +13,10 @@ define(['template/analysis-template', 'backbone', 'view/analysis-view-word'], fu
 
             this.renderContent();
 
-            this.$wordView = new AnalysisWordView({ model: this.model }).render().$el;
-            this.$root.append(this.$wordView);
-
             return this;
         },
 
         renderContent: function () {
-            this.$root = this.$el.find(".col-md-6");
             this.$table = this.$el.find(".hop-table");
 
             this.renderSentences();
@@ -35,6 +30,9 @@ define(['template/analysis-template', 'backbone', 'view/analysis-view-word'], fu
 
             this.$table.append(headerTemplate);
             var probs = this.model.get('memoryProbabilities');
+
+            if (probs.length === 0)
+                return;
 
             _.each(sentences, function(val, idx) {
                 var prob = probs[idx],

@@ -1,12 +1,10 @@
 define([], function() {
 
     return [
-        '<div class="col-md-6">' +
-            '<div class="form-group jumbotron">' +
-                '<table class="hop-table table">' +
+        '<div class="form-group jumbotron">' +
+            '<table class="hop-table table">' +
 
-                '</table>' +
-            '</div>' +
+            '</table>' +
         '</div>',
 
         '<tr>' +

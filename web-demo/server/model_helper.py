@@ -10,17 +10,17 @@ max_memory_size is the maximum size allowed during training
 memory_size is the actual memory size used based on max story size
 """
 config = {
-    'batch': 64,
-    'vocab_size': 20,
-    'sentence_size': 6,
+    'batch': 32,
+    'vocab_size': 175,
+    'sentence_size': 11,
     'max_memory_size': 50,
-    'memory_size': 10,
-    'embedding_size': 40,
+    'memory_size': 50,
+    'embedding_size': 50,
     'hops': 3,
     'max_grad_norm': 40.0,
-    'regularization': 0.02,
+    'regularization': 1e-5,
     'epsilon': 1e-8,
-    'lr': 0.01
+    'lr': 0.001
 }
 
 def get_wt_dir_name():
@@ -37,6 +37,8 @@ def get_wt_dir_name():
 
 
 restore_location = get_wt_dir_name()
+print(restore_location)
+
 sess = tf.Session()
 
 model = MemN2N(config["batch"],
@@ -50,7 +52,7 @@ model = MemN2N(config["batch"],
                l2=config["regularization"],
                lr=config["lr"],
                epsilon=config["epsilon"],
-               nonlin=None,
+               nonlin=tf.nn.relu,
                restoreLoc=restore_location)
 
 
