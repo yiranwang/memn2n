@@ -2,7 +2,9 @@ define(['template/analysis-word-template', 'backbone', 'jquery-ui'], function(an
 
     var MAX_SENTENCE_LENGTH = 11,
       MAX_HOPS = 3,
-      WORD_IMPORTANCE_VECTOR = [0.06061461,  0.04120471,  0.14728905,  0.22691217,  0.04447887, 0.47950059];
+      WORD_IMPORTANCE_VECTOR = [ 0.0158531 ,  0.01214825,  0.01591476,  0.21010481,  0.0142038 ,
+        0.14066565,  0.16964697,  0.1430412 ,  0.09100302,  0.1546434 ,
+        0.03277504];
 
     var AnalysisWordView = Backbone.View.extend({
         initialize: function () {

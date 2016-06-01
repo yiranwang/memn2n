@@ -14,7 +14,8 @@ define(['template/story-row-template', 'backbone'], function(storyTemplate, Back
             var template = _.template(storyTemplate, {
                 story: this.story.s,
                 question: this.story.q,
-                answer: this.story.a
+                answer: this.story.a,
+                task: this.story.t
             });
 
             this.$el.html(template);
@@ -24,8 +25,11 @@ define(['template/story-row-template', 'backbone'], function(storyTemplate, Back
 
         onStorySelect: function () {
             this.model.set({
-                "correctAnswer": this.story.a
-            }, {silent: true});
+                "answer": "",
+                "correctAnswer": this.story.a,
+                "answerProbability": 0,
+                "memoryProbabilities": []
+            });
 
             app.inputView.setValues(this.story.s, this.story.q);
 

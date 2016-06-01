@@ -25,7 +25,11 @@
     overflow-y: scroll;
 }
 
-.modal-body-content h4 {
+.modal-body-content h5 {
     display: inline-block;
     margin-right: 10px;
+}
+
+.modal-body-content .thumbnail {
+    height: 410px;
 }
