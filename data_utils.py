@@ -93,21 +93,27 @@ def vectorize_data(data, word_idx, sentence_size, memory_size):
     Q = []
     A = []
     for story, query, answer in data:
+        lq = max(0, sentence_size - len(query))
+        q = [word_idx[w] for w in query] + [0] * lq
+        
         ss = []
         for i, sentence in enumerate(story, 1):
             ls = max(0, sentence_size - len(sentence))
             ss.append([word_idx[w] for w in sentence] + [0] * ls)
 
-        # take only the most recent sentences that fit in memory
-        ss = ss[::-1][:memory_size][::-1]
-
-        # pad to memory_size
-        lm = max(0, memory_size - len(ss))
-        for _ in range(lm):
-            ss.append([0] * sentence_size)
-
-        lq = max(0, sentence_size - len(query))
-        q = [word_idx[w] for w in query] + [0] * lq
+        if len(ss) > memory_size:
+            # Use Jaccard similarity to determine the most relevant sentences
+            q_words = set(q)
+            least_like_q = sorted(ss, cmp = lambda x, y: jaccard(set(x), q_words) < jaccard(set(y), q_words))[:len(ss)-memory_size]
+            for sent in least_like_q:
+                # Remove the first occurrence of sent. A list comprehension as in [sent for sent in ss if sent not in least_like_q]
+                # should not be used, as it would remove multiple occurrences of the same sentence, some of which might actually make the cutoff.
+                ss.remove(sent)
+        else:
+            # pad to memory_size
+            lm = max(0, memory_size - len(ss))
+            for _ in range(lm):
+                ss.append([0] * sentence_size)
 
         y = np.zeros(len(word_idx) + 1) # 0 is reserved for nil word
         for a in answer:
@@ -117,3 +123,10 @@ def vectorize_data(data, word_idx, sentence_size, memory_size):
         Q.append(q)
         A.append(y)
     return np.array(S), np.array(Q), np.array(A)
+
+def jaccard(a, b):
+    '''
+    Assumes that a and b are sets so that calling code only has to cast the question to set once.
+    '''
+    return len(a.intersection(b)) / float(len(a.union(b)))
+    set(a).intersection(set(b))

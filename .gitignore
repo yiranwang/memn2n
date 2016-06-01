@@ -21,3 +21,15 @@ data
 /web-demo/.DS_Store
 
 /web-demo/js/lib/.DS_Store
+
+/web-demo/.idea/.name
+/web-demo/.idea/compiler.xml
+/web-demo/.idea/copyright/profiles_settings.xml
+/web-demo/.idea/encodings.xml
+/web-demo/.idea/misc.xml
+/web-demo/.idea/modules.xml
+/web-demo/.idea/workspace.xml
+
+/web-demo/web-demo.iml
+
+/web-demo/.idea/uiDesigner.xml

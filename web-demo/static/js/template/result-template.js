@@ -10,8 +10,8 @@ define([], function() {
                 '<%= confidence %>%' +
               '</div>' +
             '</div>' +
-            '<h3>Correct answer</h3>' +
-            '<h4><span class="label label-default"><%= correctAnswer %></span></h4>' +
+            '<h3 class="<%= correctAnswerShown %>">Correct answer</h3>' +
+            '<h4 class="<%= correctAnswerShown %>"><span class="label label-default"><%= correctAnswer %></span></h4>' +
         '</div>' +
 
     '</div>';
