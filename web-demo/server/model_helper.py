@@ -23,20 +23,7 @@ config = {
     'lr': 0.001
 }
 
-def get_wt_dir_name():
-    lr = config["lr"]
-    eps = config["epsilon"]
-    mgn = config["max_grad_norm"]
-    hp = config["hops"]
-    es = config["embedding_size"]
-    ms = config["max_memory_size"]
-    reg = config["regularization"]
-
-    log_dir_name = "lr={0}_eps={1}_mgn={2}_hp={3}_es={4}_ms={5}_reg={6}".format(lr, eps, mgn, hp, es, ms, reg)
-    return os.path.join('server/model/weights', log_dir_name)
-
-
-restore_location = get_wt_dir_name()
+restore_location = 'server/model/weights/wts_pe'
 print(restore_location)
 
 sess = tf.Session()
