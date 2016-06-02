@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 from data_utils import load_task, vectorize_data
-from sklearn import cross_validation, metrics
+from sklearn import metrics
 from memn2n import MemN2N
 from itertools import chain
 from six.moves import range
@@ -17,7 +17,7 @@ import pickle
 
 tf.flags.DEFINE_float("learning_rate", 0.001, "Learning rate for Adam Optimizer.")
 tf.flags.DEFINE_float("epsilon", 1e-8, "Epsilon value for Adam Optimizer.")
-tf.flags.DEFINE_float("regularization", 1e-5, "Regularization.")
+tf.flags.DEFINE_float("regularization", 0.03, "Regularization.")
 tf.flags.DEFINE_float("max_grad_norm", 40.0, "Clip gradients to this norm.")
 tf.flags.DEFINE_integer("evaluation_interval", 10, "Evaluate and print results every x epochs")
 tf.flags.DEFINE_integer("batch_size", 32, "Batch size for training.")
@@ -108,38 +108,29 @@ trainA = []
 valA = []
 for task in train:
     S, Q, A = vectorize_data(task, word_idx, sentence_size, memory_size)
-    ts, vs, tq, vq, ta, va = cross_validation.train_test_split(S, Q, A, test_size=0.1, random_state=FLAGS.random_state)
-    trainS.append(ts)
-    trainQ.append(tq)
-    trainA.append(ta)
-    valS.append(vs)
-    valQ.append(vq)
-    valA.append(va)
+    trainS.append(S)
+    trainQ.append(Q)
+    trainA.append(A)
 
 trainS = reduce(lambda a,b : np.vstack((a,b)), (x for x in trainS))
 trainQ = reduce(lambda a,b : np.vstack((a,b)), (x for x in trainQ))
 trainA = reduce(lambda a,b : np.vstack((a,b)), (x for x in trainA))
-valS = reduce(lambda a,b : np.vstack((a,b)), (x for x in valS))
-valQ = reduce(lambda a,b : np.vstack((a,b)), (x for x in valQ))
-valA = reduce(lambda a,b : np.vstack((a,b)), (x for x in valA))
-
 testS, testQ, testA = vectorize_data(list(chain.from_iterable(test)), word_idx, sentence_size, memory_size)
 
 n_train = trainS.shape[0]
-n_val = valS.shape[0]
 n_test = testS.shape[0]
 
 print("Training Size", n_train)
-print("Validation Size", n_val)
 print("Testing Size", n_test)
-
-print(trainS.shape, valS.shape, testS.shape)
-print(trainQ.shape, valQ.shape, testQ.shape)
-print(trainA.shape, valA.shape, testA.shape)
+print(trainS.shape, testS.shape)
+print(trainQ.shape, testQ.shape)
+print(trainA.shape, testA.shape)
 
 train_labels = np.argmax(trainA, axis=1)
 test_labels = np.argmax(testA, axis=1)
+'''
 val_labels = np.argmax(valA, axis=1)
+'''
 
 tf.set_random_seed(FLAGS.random_state)
 batch_size = FLAGS.batch_size
@@ -150,9 +141,6 @@ batches = zip(range(0, n_train-batch_size, batch_size), range(batch_size, n_trai
 # zero-indexed
 tasks = xrange(0, 20)
 best_test_accs = [-1] * len(tasks)
-best_val_accs = [-1] * len(tasks)
-best_val_epochs = [-1] * len(tasks)
-best_val_update_epoch = -1
 stop_early = False
 best_train_accs = []
 with tf.Session() as sess:
@@ -187,58 +175,34 @@ with tf.Session() as sess:
                 pred = model.predict(s, q)
                 acc = metrics.accuracy_score(pred, train_labels[start:end])
                 train_accs.append(acc)
-            val_accs = []
+            # test predictions for this task
             for task in tasks:
-                start = task * n_val/20
-                end = start + n_val/20
-                s = valS[start:end]
-                q = valQ[start:end]
+                start = task * n_test/20
+                end = start + n_test/20
+                s = testS[start:end]
+                q = testQ[start:end]
                 pred = model.predict(s, q)
-                acc = metrics.accuracy_score(pred, val_labels[start:end])
-                val_accs.append(acc)
+                acc = metrics.accuracy_score(pred, test_labels[start:end])
+                best_test_accs[task] = acc
 
-                if acc > best_val_accs[task]:
-                    best_val_accs[task] = acc
-                    best_val_epochs[task] = i
-                    best_val_update_epoch = i
-                    # test predictions for this task
-                    start = task * n_test/20
-                    end = start + n_test/20
-                    s = testS[start:end]
-                    q = testQ[start:end]
-                    pred = model.predict(s, q)
-                    acc = metrics.accuracy_score(pred, test_labels[start:end])
-                    best_test_accs[task] = acc
-
-            average_acc = np.average(val_accs)
-            if best_val_update_epoch == i:
-                # something was updated in this epoch
-                new_test_bests = [test_acc if best_val_epochs[task] == i else "unchanged" for task, test_acc in enumerate(best_test_accs)]
-                accs = zip(train_accs, val_accs, new_test_bests)
-                best_train_accs = train_accs
-            else:
-                if i - FLAGS.early >= best_val_update_epoch:
-                    stop_early = True
-                accs = zip(train_accs, val_accs)
+            accs = zip(train_accs, best_test_accs)
+            best_train_accs = train_accs
 
             print('-----------------------')
             print('Epoch', i)
             print('Total Cost:', total_cost)
-            print('Average Validation Accuracy: {}'.format(average_acc))
             print()
 
             for t, tup in enumerate(accs):
                 print("Task {}".format(t+1))
                 print("Training Accuracy = {}".format(tup[0]))
-                print("Validation Accuracy = {}".format(tup[1]))
-                if len(tup) > 2:
-                    print("Testing Accuracy = {}".format(tup[2]))
+                print("Testing Accuracy = {}".format(tup[1]))
                 print()
 
                 train_acc_summary = tf.scalar_summary("train_acc", tup[0])
-                val_acc_summary = tf.scalar_summary("val_acc", tup[1])
+                test_acc_summary = tf.scalar_summary("test_acc", tup[1])
 
-                vas = sess.run(val_acc_summary)
+                vas = sess.run(test_acc_summary)
                 tas = sess.run(train_acc_summary)
 
                 writers["task{0}".format(t+1)].add_summary(vas, i)
@@ -259,9 +223,7 @@ with tf.Session() as sess:
             print('Writing final results to {}'.format(output_file))
             df = pd.DataFrame({
             'Training Accuracy': best_train_accs,
-            'Validation Accuracy': best_val_accs,
             'Testing Accuracy': best_test_accs,
-            'Best Epoch': best_val_epochs
             }, index=range(1, 21))
             df.index.name = 'Task'
             df.to_csv(output_file)
