@@ -135,7 +135,7 @@ class MemN2N(object):
         # gradient pipeline
         grads_and_vars = self._opt.compute_gradients(loss_op)
         grads_and_vars = [(tf.clip_by_norm(g, self._max_grad_norm), v) for g,v in grads_and_vars]
-        grads_and_vars = [(add_gradient_noise(g), v) for g,v in grads_and_vars]
+        #grads_and_vars = [(add_gradient_noise(g), v) for g,v in grads_and_vars]
         nil_grads_and_vars = []
         for g, v in grads_and_vars:
             if v.name in self._nil_vars:
