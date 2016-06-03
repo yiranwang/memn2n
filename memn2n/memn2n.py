@@ -118,12 +118,15 @@ class MemN2N(object):
 
         # cross entropy
         logits = self._inference(self._stories, self._queries) # (batch_size, vocab_size)
-        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits, tf.cast(self._answers, tf.float32), name="cross_entropy")
+        labels = tf.cast(self._answers, tf.float32)
+        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits, labels, name="cross_entropy")
         cross_entropy_sum = tf.reduce_sum(cross_entropy, name="cross_entropy_sum")
+        linear_error = - logits * labels
+        linear_error_sum = tf.reduce_sum(linear_error, name = "linear_error_sum")
 
         # loss op
         reg_loss = self._l2 * tf.add_n(tf.get_collection('reg_loss'))
-        loss_op = cross_entropy_sum + reg_loss
+        loss_op = (1 - self.gamma_placeholder) * cross_entropy_sum + self.gamma_placeholder * linear_error_sum + reg_loss
 
         loss_op_summary = tf.scalar_summary("loss", loss_op)
 
@@ -179,6 +182,7 @@ class MemN2N(object):
         self._queries = tf.placeholder(tf.int32, [None, self._sentence_size], name="queries")
         self._answers = tf.placeholder(tf.int32, [None, self._vocab_size], name="answers")
         self._val_answers = tf.placeholder(tf.int32, [None], name="val_answers")
+        self.gamma_placeholder = tf.placeholder(tf.float32, (), name = "gamma")
 
     def _build_vars(self):
         with tf.variable_scope(self._name + str(1)):
@@ -248,7 +252,7 @@ class MemN2N(object):
         acc_op = tf.reduce_mean(tf.cast(corr_pred, tf.float32))
         return acc_op
 
-    def batch_fit(self, stories, queries, answers):
+    def batch_fit(self, stories, queries, answers, gamma = 0.0):
         """Runs the training algorithm over the passed batch
 
         Args:
@@ -259,7 +263,7 @@ class MemN2N(object):
         Returns:
             loss: floating-point number, the loss computed for the batch
         """
-        feed_dict = {self._stories: stories, self._queries: queries, self._answers: answers}
+        feed_dict = {self._stories: stories, self._queries: queries, self._answers: answers, self.gamma_placeholder: gamma}
         loss, loss_op_summary, _, _, loss_ema = self._sess.run([self.loss_op, self.loss_op_summary, self.train_op, self.update_loss_ema, self.loss_ema_op], feed_dict=feed_dict)
         return loss, loss_op_summary, loss_ema
 

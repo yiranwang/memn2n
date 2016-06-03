@@ -17,7 +17,7 @@ import pickle
 
 tf.flags.DEFINE_float("learning_rate", 0.001, "Learning rate for Adam Optimizer.")
 tf.flags.DEFINE_float("epsilon", 1e-8, "Epsilon value for Adam Optimizer.")
-tf.flags.DEFINE_float("regularization", 1e-5, "Regularization.")
+tf.flags.DEFINE_float("regularization", 0.03, "Regularization.")
 tf.flags.DEFINE_float("max_grad_norm", 40.0, "Clip gradients to this norm.")
 tf.flags.DEFINE_integer("evaluation_interval", 10, "Evaluate and print results every x epochs")
 tf.flags.DEFINE_integer("batch_size", 32, "Batch size for training.")
@@ -171,7 +171,8 @@ with tf.Session() as sess:
             s = trainS[start:end]
             q = trainQ[start:end]
             a = trainA[start:end]
-            cost_t, cost_t_summary, cost_ema = model.batch_fit(s, q, a)
+            gamma = 2.0 ** (-i) # exponential decay for gamma
+            cost_t, cost_t_summary, cost_ema = model.batch_fit(s, q, a, gamma)
             total_cost += cost_t
 
         total_cost_summary = tf.scalar_summary("epoch_loss", total_cost)
