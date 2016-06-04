@@ -4,75 +4,38 @@ Implementation of [End-To-End Memory Networks](http://arxiv.org/abs/1503.08895) 
 
 ![MemN2N picture](https://www.dropbox.com/s/3rdwfxt80v45uqm/Screenshot%202015-11-19%2000.57.27.png?dl=1)
 
-### Get Started
+This is a fork of the original repository https://github.com/domluna/memn2n written by Dominique Luna.
 
-```
-git clone git@github.com:domluna/memn2n.git
-cd memn2n
-python single.py
-```
+Changes from the original implementation include -
+1. L2 regularizations for weight matrices
+2. Jaccard similarity for sentence selection to form memories
+3. Per task early stopping during joint training
+4. Web demo (see below)
 
-### Examples
+## Our results
 
-Running a [single bAbI task](./single.py)
+Task  |  Testing Accuracy
+------|------------------
+1     |  99.6
+2     |  67.4
+3     |  57.6
+4     |  98.4
+5     |  83.1
+6     |  99.3
+7     |  85.8
+8     |  91.8
+9     |  99.3
+10    |  95.7
+11    |  97.5
+12    |  99.2
+13    |  98.3
+14    |  87.7
+15    |  100
+16    |  48
+17    |  61.3
+18    |  92.1
+19    |  10.8
+20    |  100
 
-Running a [joint model on all bAbI tasks](./joint.py)
-
-These files are also a good example of usage.
-
-### Requirements
-
-* tensorflow 0.8
-* scikit-learn 0.17.1
-* six 1.10.0
-
-### Results
-
-For a task to pass it has to meet 95%+ testing accuracy. Measured on single tasks on the 1k data.
-
-pass: 1,4,12,15,20
-
-Several other tasks have 80%+ testing accuracy.
-
-Unless specified, the Adam optimizer was used.
-
-The following params were used:
-  * epochs: 200
-  * learning_rate: 0.01
-  * epsilon: 1e-8
-  * embedding_size: 20
-
-A joint model was also run with the following params:
-  * epochs: 100
-  * learning_rate: 0.01
-  * epsilon: 1.0
-  * embedding_size: 40
-
-[Full results](./results/joint_100_epochs.csv).
-
-Task  |  Training Accuracy  |  Validation Accuracy  |  Testing Accuracy
-------|---------------------|-----------------------|------------------
-1     |  0.97               |  0.95                 |  0.96
-2     |  0.84               |  0.68                 |  0.61
-3     |  0.5                |  0.4                  |  0.3
-4     |  0.93               |  0.94                 |  0.93
-5     |  0.91               |  0.76                 |  0.81
-6     |  0.78               |  0.8                  |  0.72
-7     |  0.87               |  0.86                 |  0.8
-8     |  0.82               |  0.8                  |  0.77
-9     |  0.76               |  0.73                 |  0.72
-10    |  0.71               |  0.66                 |  0.63
-11    |  0.9                |  0.87                 |  0.89
-12    |  0.93               |  0.92                 |  0.92
-13    |  0.93               |  0.88                 |  0.93
-14    |  0.88               |  0.87                 |  0.76
-15    |  1.0                |  1.0                  |  1.0
-16    |  0.57               |  0.42                 |  0.46
-17    |  0.7                |  0.61                 |  0.57
-18    |  0.93               |  0.96                 |  0.9
-19    |  0.12               |  0.07                 |  0.09
-20    |  1.0                |  1.0                  |  1.0
-
-### Notes
-
-I didn't play around with the epsilon param in Adam until after my initial results but values of 1.0 and 0.1 seem to help convergence and overfitting.
+## Demo
+We added a web demo allowing us to test the model and visualize the memory probabilities in each hop (episode). Below are a few examples that demonstrate it -
