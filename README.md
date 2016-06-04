@@ -38,4 +38,6 @@ Task  |  Testing Accuracy
 20    |  100
 
 ## Demo
-We added a web demo allowing us to test the model and visualize the memory probabilities in each hop (episode). Below are a few examples that demonstrate it -
+We added a web demo allowing us to test the model and visualize the memory probabilities in each hop (episode). Below is an example that demonstrate it -
+
+![Demo picture](https://github.com/priyank87/memn2n/blob/master/memn2n_web_demo.png)
