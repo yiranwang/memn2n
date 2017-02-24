@@ -10,9 +10,10 @@ from flask import Flask, request, jsonify
 import server.testing_data_utils
 import server.babi_memnn_testing
 import server.training_data_utils
+from server.config import OUTPUT_PATH, CHALLENGE_TYPE
 import numpy as np
 import json
-from config import OUTPUT_PATH, CHALLENGE_TYPE
+
 
 # prepare task specific vocabulary and parametes
 vocab, vocab_size, story_maxlen, query_maxlen = server.testing_data_utils.load_testing_story_params(OUTPUT_PATH, CHALLENGE_TYPE)

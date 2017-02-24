@@ -10,9 +10,8 @@ from __future__ import print_function
 from qaTasks import challenges
 from training_data_utils import get_stories, vectorize_stories, get_babi_training_data, word2int_encode
 from functools import reduce
-import model_builder
 import pickle
-from config import OUTPUT_PATH
+from config import OUTPUT_PATH, MODEL, NUM_EPOCHS
 
 
 def train_memnn_on(challenge_type, output_path, num_epochs):
@@ -70,7 +69,8 @@ def train_memnn_on(challenge_type, output_path, num_epochs):
     print('-')
     print('Compiling...')
 
-    answer = model_builder.build_memnn(story_maxlen, query_maxlen, vocab_size)
+    answer = MODEL(story_maxlen, query_maxlen, vocab_size) # -> "concat"
+    # answer = MODEL(story_maxlen, query_maxlen, vocab_size, story_maxlen) # -> "sum"
 
     answer.compile(optimizer='rmsprop', loss='categorical_crossentropy',
                metrics=['accuracy'])
@@ -94,9 +94,8 @@ def train_memnn_on(challenge_type, output_path, num_epochs):
     return story_maxlen, query_maxlen
 
 
-def main(output_path):
+def main(output_path, num_epochs):
     maxLength = {}
-    num_epochs = 40
     for challenge_type in challenges:
         story_maxlen, query_maxlen = train_memnn_on(challenge_type, output_path, num_epochs)
         maxLength[challenge_type] = (story_maxlen, query_maxlen)
@@ -109,7 +108,7 @@ def main(output_path):
 
 
 if __name__ == '__main__':
-    main(OUTPUT_PATH)
+    main(OUTPUT_PATH, NUM_EPOCHS)
 
 ################################################################
 ################################################################
