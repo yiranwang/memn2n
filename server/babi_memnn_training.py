@@ -12,7 +12,7 @@ from training_data_utils import get_stories, vectorize_stories, get_babi_trainin
 from functools import reduce
 import pickle
 from config import OUTPUT_PATH, MODEL, NUM_EPOCHS
-from model_builder import MemNN
+# from model_builder import MemNN
 
 
 def train_memnn_on(challenge_type, output_path, num_epochs):
@@ -74,14 +74,18 @@ def train_memnn_on(challenge_type, output_path, num_epochs):
 
     # answer = MODEL(story_maxlen, query_maxlen, vocab_size, story_maxlen) # -> "sum"
 
-    answer = MemNN(story_maxlen, query_maxlen, vocab_size, 64, hops = 3, weights_sharing = 'layerwise').build()
+    # answer = MemNN(story_maxlen, query_maxlen, vocab_size, 64, hops = 1, weights_sharing = 'dev').build()
+    answer = MODEL(story_maxlen, query_maxlen, vocab_size, 64, hops = 5, weights_sharing = 'layerwise').build()
 
-    answer.compile(optimizer='rmsprop', loss='categorical_crossentropy',
-               metrics=['accuracy'])
+    answer.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
 
+    print("finished compiling ------------------------------------------ ")
+
+    # sample_weights_array = np.array([np.ones(inputs_train.shape), np.ones(queries_train.shape)])
     answer.fit([inputs_train, queries_train], [answers_train],
                batch_size=32,
                nb_epoch=num_epochs,
+            #    sample_weight = np.array([3]),
                validation_data=([inputs_test, queries_test], [answers_test]))
 
     vocab_output_file = output_path + 'vocab_in_{}.pickle'.format(challenge_type)

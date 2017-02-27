@@ -10,7 +10,7 @@ import model_builder
 '''
 the model used during training.
 '''
-MODEL = model_builder.build_memnn
+MODEL = model_builder.MemNN
 
 '''
 the path for outputing trained model and restoring the model

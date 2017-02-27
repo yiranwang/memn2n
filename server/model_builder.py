@@ -5,6 +5,7 @@ This module defines and builds the model for training and testing.
 2. build_memnn_s() builds the model where the last merge is done with "sum" instead of "concat".
 ==================================================================
 """
+import tensorflow as tf
 import numpy as np
 from keras import backend as K
 from keras.models import Model
@@ -66,10 +67,20 @@ class MemNN(object):
     def _match(self, story_encoder_in, query_encoder_in):
         """
         It computes the dot product of story_encoder_in tensor (S, D) and query_encoder_in tensor (Q, D), a "match" tensor (S, Q).
-            returns softened probability distribution after softmax(match) activation.
+            and softened probability distribution after softmax(match) activation
+            sums over each dimension in Q, got (S, )
+            prepare it for matrix multiplication so we need to expand the sumed value to (S, Q) again.
         """
         match = merge([story_encoder_in, query_encoder_in], mode="dot", dot_axes=[2, 2]) # the 0-axs is for batch_size
-        match = Activation("softmax")(match) # tensor type: <class 'tensorflow.python.framework.ops.Tensor'>
+        print "\t\t\t match shape:", match.get_shape()
+        match = Activation("softmax")(match)
+        print "\t\t\t match shape:", match.get_shape()
+        match = Lambda(lambda x: K.sum(x, axis = 2))(match)
+        print "\t\t\t match shape:", match.get_shape()
+        match = RepeatVector(self.query_maxlen)(match)
+        print "\t\t\t match shape:", match.get_shape()
+        match = Permute((2, 1))(match)
+        print "\t\t\t match shape:", match.get_shape()
         return match
 
     def _response(self, match, story_encoder_out):
@@ -84,7 +95,6 @@ class MemNN(object):
         print "\t\t\t response shape:", response.get_shape()
         response = Lambda(lambda x: K.sum(x, axis = 1))(response)
         print "\t\t\t response shape:", response.get_shape()
-
         response = RepeatVector(self.embedding_output_dim)(response)
         print "\t\t\t response shape:", response.get_shape()
         response = Permute((2, 1))(response)  # 0-axis: batch_size; 1-axis: query_maxlen; 2-axis: story_maxlen;
@@ -94,12 +104,10 @@ class MemNN(object):
 
     def _sum_output(self, response, query_encoder_in):
         """
-        It computes the sum of response (Q, ) and query_encider_in (Q, D), a "out" tensor (Q, D)
-            returns a sigma-ed vector (Q, ) with the same shape as query_input just came in.
+        It computes the sum of response (Q, D) and query_encider_in (Q, D)
+            return a "out" tensor (Q, D)
         """
         out = merge([response, query_encoder_in], mode="sum")
-        print "\t\t\t out shape:", out.get_shape()
-        out = Lambda(lambda x: K.sum(x, axis = 2))(out)
         print "\t\t\t out shape:", out.get_shape()
         return out
 
@@ -114,31 +122,36 @@ class MemNN(object):
 
     def _add_fc_layer(self, sum_out):
         """
-        It computes the linear transformation of "out" tensor (Q, ) out of multiple hops into (V, ), followed by a sfmx activation
+        It computes the linear transformation of "out" tensor (Q, D) out of multiple hops into (V, ), followed by a sfmx activation
             returns a prediction probability distribution over vocabulary of size V
         """
         answer_output = Dense(self.vocab_size)(sum_out)
+        print "\t\t answer_output:", answer_output.get_shape()
         answer_output = Activation("softmax")(answer_output)
+        print "\t\t answer_output:", answer_output.get_shape()
+        answer_output = Lambda(lambda x: K.sum(x, axis = 1))(answer_output)
+
         return answer_output
 
 
     def _build_layerwise_model(self):
         story_input = Input(shape=(self.story_maxlen,), dtype="int32")
+        print "\t story_input:", story_input
         query_input = Input(shape=(self.query_maxlen,), dtype="int32")
-        # tensor type: <class 'tensorflow.python.framework.ops.Tensor'>
+        print "\t query_input:", query_input
 
-        shared_story_encoding_in = self._embedding_in(content = 'story')
-        shared_story_encoding_out = self._embedding_out(content = 'story')
+        story_encoder_in = self._embedding_in(content = 'story')(story_input)
+        print "\t story_encoder_in:", story_encoder_in.get_shape()
+        story_encoder_out = self._embedding_out(content = 'story')(story_input)
+        print "\t story_encoder_out:", story_encoder_out.get_shape()
+        query_encoder_in = self._embedding_in(content = 'query')(query_input)
+        print "\t query_encoder_in:", query_encoder_in.get_shape()
 
-        last_out = query_input
+        last_out = query_encoder_in
+
         for _ in range(self.hops):
-            story_encoder_in = shared_story_encoding_in(story_input)
-            print "\t story_encoder_in:", story_encoder_in.get_shape()
-            query_encoder_in = self._embedding_in(content = 'query')(last_out)
-            print "\t query_encoder_in:", query_encoder_in.get_shape()
-            story_encoder_out = shared_story_encoding_out(story_input)
-            print "\t story_encoder_out:", story_encoder_out.get_shape()
-            last_out = self._oneHop(story_encoder_in, query_encoder_in, story_encoder_out)
+
+            last_out = self._oneHop(story_encoder_in, last_out, story_encoder_out)
             print "\t last_out:", last_out.get_shape()
 
         answer_output = self._add_fc_layer(last_out)
@@ -147,14 +160,62 @@ class MemNN(object):
         model = Model(input=[story_input, query_input], output=[answer_output])
         return model
 
+
+    def _build_dev_model(self):
+        story_input = Input(shape=(self.story_maxlen,), dtype="int32")
+        print "\t story_input:", story_input
+        query_input = Input(shape=(self.query_maxlen,), dtype="int32")
+        print "\t query_input:", query_input
+
+        story_encoder_in = self._embedding_in(content = 'story')(story_input)
+        print "\t story_encoder_in:", story_encoder_in.get_shape()
+        story_encoder_out = self._embedding_out(content = 'story')(story_input)
+        print "\t story_encoder_out:", story_encoder_out.get_shape()
+        query_encoder_in = self._embedding_in(content = 'query')(query_input)
+        print "\t query_encoder_in:", query_encoder_in.get_shape()
+
+        last_out = self._oneHop(story_encoder_in, query_encoder_in, story_encoder_out)
+        print "\t last_out:", last_out.get_shape()
+
+        # print K.is_keras_tensor(last_out)
+        #
+        # last_out = Lambda(lambda x: K.floor(x))(last_out)
+        # print K.is_keras_tensor(last_out)
+
+        # query_encoder_in = self._embedding_in(content = 'query')(last_out)
+        # print "\t query_encoder_in:", query_encoder_in.get_shape()
+
+        last_out = self._oneHop(story_encoder_in, last_out, story_encoder_out)
+        last_out = Lambda(lambda x: K.sum(x, axis = 2))(last_out)
+        # match = self._match(story_encoder_in, query_encoder_in)
+        # match (S, Q)
+
+        # response = self._response(match, story_encoder_out)
+        # response (Q, S)
+
+        # answer_output = LSTM(4)(match)
+        # answer_output = Lambda(lambda x: K.sum(x, axis = 2))(match)
+        # print answer_output.get_shape()
+
+        # answer_output = self._add_fc_layer(answer_output)
+        answer_output = Dense(self.vocab_size)(last_out)
+        print "\t\t answer_output:", answer_output.get_shape()
+
+
+        return Model(input=[story_input, query_input], output=[answer_output])
+
     def build(self):
         if self.weights_sharing == 'layerwise':
             return self._build_layerwise_model()
+
+        elif self.weights_sharing == 'dev':
+            return self._build_dev_model()
         else:
             raise Exception("under dev...")
 
 
 ''' ----------------------------------------------------------------------------
+
 def build_memnn(story_maxlen, query_maxlen, vocab_size, embedding_output_dim=64):
 
     print "NOW IN build_memnn() -----------------------------------------------"
