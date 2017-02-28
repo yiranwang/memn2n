@@ -77,11 +77,15 @@ def train_memnn_on(challenge_type, output_path, num_epochs):
     print("finished compiling ------------------------------------------ ")
 
     # sample_weights_array = np.array([np.ones(inputs_train.shape), np.ones(queries_train.shape)])
-    answer.fit([inputs_train, queries_train], [answers_train],
+    hist = answer.fit([inputs_train, queries_train], [answers_train],
                batch_size=32,
                nb_epoch=num_epochs,
-            #    sample_weight = np.array([3]),
                validation_data=([inputs_test, queries_test], [answers_test]))
+
+    print('Saving training history to {} ...'.format(output_path))
+    with open(output_path + 'training_history_{}_{}.pickle'.format(SCHEME, challenge_type), 'wb') as history_file:
+        pickle.dump(hist.history, history_file)
+    print('Done!')
 
     vocab_output_file = output_path + 'vocab_in_{}.pickle'.format(challenge_type)
     print('Saving vocab to {} ...'.format(output_path))
@@ -90,7 +94,7 @@ def train_memnn_on(challenge_type, output_path, num_epochs):
     print('Done!')
 
     print('Saving model to {} ...'.format(output_path))
-    model_output_file = output_path + 'memnn_for_{}.h5'.format(challenge_type)
+    model_output_file = output_path + '{}_{}.h5'.format(SCHEME, challenge_type)
     answer.save(model_output_file)
     print('Done!')
 

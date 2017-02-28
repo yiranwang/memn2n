@@ -13,6 +13,7 @@ import server.training_data_utils
 from server.config import OUTPUT_PATH, CHALLENGE_TYPE
 import numpy as np
 import json
+from server.config import MODEL, SCHEME
 
 
 # prepare task specific vocabulary and parametes
@@ -21,7 +22,7 @@ word_idx = server.training_data_utils.word2int_encode(vocab)
 idx_word = server.testing_data_utils.int2word_decode(word_idx)
 
 # reload trained model
-answer = server.babi_memnn_testing.recover_model_from(OUTPUT_PATH + 'memnn_for_{}.h5'.format(CHALLENGE_TYPE))
+answer = server.babi_memnn_testing.recover_model_from(OUTPUT_PATH + '{}_{}.h5'.format(SCHEME, CHALLENGE_TYPE))
 
 app = Flask(__name__, static_url_path='')
 

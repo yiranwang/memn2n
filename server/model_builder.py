@@ -35,6 +35,9 @@ class MemNN(object):
         self.story_input = None
         self.query_input = None
 
+        if self.scheme == 'mem+lstm' and self.hops != 1:
+            raise Exception('"mem+lstm" only allows for 1 hop.')
+
         if self.debug:
             print "NOW IN MemNN() -----------------------------------------------"
 

@@ -20,8 +20,8 @@ scheme kwargs:
     'mem+lstm':     memory + sequential model, word embedding - one memory hop (concat) - LSTM - output
     'dev':          memory + sequential model, word embedding - LSTM encoding + multiple hops - output
 '''
-SCHEME = 'dev'
-PARAMS = {'hops': 2, 'fixed_embedding': True}
+SCHEME = 'mem+lstm'
+PARAMS = {'hops': 1, 'fixed_embedding': True}
 
 
 '''
