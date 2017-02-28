@@ -1,8 +1,6 @@
 """
 ==================================================================
 This module defines and builds the model for training and testing.
-1. build_memnn() builds the original babi_memnn model at: https://github.com/fchollet/keras/blob/master/examples/babi_memnn.py
-2. build_memnn_s() builds the model where the last merge is done with "sum" instead of "concat".
 ==================================================================
 """
 import tensorflow as tf
