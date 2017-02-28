@@ -17,18 +17,33 @@ from keras.layers import Activation, Dense, Permute, Dropout, LSTM, Input, Lambd
 class MemNN(object):
     """
     This implements a multiple-hop End-To-End Memory Network.
+    scheme:
+        'hops': bagOfWord model, word embedding - multiple hops - output
+        'hops+lstm': bagOfWord + sequential model, word embedding - multiple hops (sum) - LSTM - output
+        'mem+lstm': memory + sequential model, word embedding - one memory hop (concat) - LSTM - output
+        'dev': memory + sequential model, word embedding - LSTM encoding + multiple hops - output
+        ''
     """
-    def __init__(self, story_maxlen, query_maxlen, vocab_size, embedding_output_dim, hops = 3, weights_sharing = 'layerwise'):
-        print "NOW IN MemNN() -----------------------------------------------"
-        self.weights_sharing = weights_sharing
-        self.hops = hops
+    def __init__(self, story_maxlen, query_maxlen, vocab_size, embedding_output_dim, params, scheme = 'hops', debug = False):
         self.story_maxlen = story_maxlen
         self.query_maxlen = query_maxlen
         self.vocab_size = vocab_size
         self.embedding_output_dim = embedding_output_dim
+        self.debug = debug
+        self.scheme = scheme
 
-    def _init_input(self):
-        pass
+        self.hops = params['hops']
+        self.fixed_embedding = params['fixed_embedding']
+        self.story_input = None
+        self.query_input = None
+
+        if self.debug:
+            print "NOW IN MemNN() -----------------------------------------------"
+
+    def _create_input(self):
+        self.story_input = Input(shape=(self.story_maxlen,), dtype="float32")
+        self.query_input = Input(shape=(self.query_maxlen,), dtype="float32")
+        return ;
 
     def _embedding_in(self, content = 'story'):
         """
@@ -72,18 +87,10 @@ class MemNN(object):
             prepare it for matrix multiplication so we need to expand the sumed value to (S, Q) again.
         """
         match = merge([story_encoder_in, query_encoder_in], mode="dot", dot_axes=[2, 2]) # the 0-axs is for batch_size
-        print "\t\t\t match shape:", match.get_shape()
-        match = Activation("softmax")(match)
-        print "\t\t\t match shape:", match.get_shape()
-        match = Lambda(lambda x: K.sum(x, axis = 2))(match)
-        print "\t\t\t match shape:", match.get_shape()
-        match = RepeatVector(self.query_maxlen)(match)
-        print "\t\t\t match shape:", match.get_shape()
-        match = Permute((2, 1))(match)
-        print "\t\t\t match shape:", match.get_shape()
+        match = Activation('softmax')(match)
         return match
 
-    def _response(self, match, story_encoder_out):
+    def _response(self, match, story_encoder_out, mode = 'sum'):
         """
         It computes the element-wise multiplication of match tensor (S, Q) and story_encoder_out tensor (S, Q), a "response" tensor (S, Q)
             sigma the (Q, S) into a vector (Q, ) for next-stage use
@@ -91,34 +98,28 @@ class MemNN(object):
             repeats the vector (Q, ) for D times to turn (Q, ) into (D, Q) and transposes it into (Q, D).
             NOW READY TO GO.
         """
-        response = merge([match, story_encoder_out], mode="mul")
-        print "\t\t\t response shape:", response.get_shape()
-        response = Lambda(lambda x: K.sum(x, axis = 1))(response)
-        print "\t\t\t response shape:", response.get_shape()
-        response = RepeatVector(self.embedding_output_dim)(response)
-        print "\t\t\t response shape:", response.get_shape()
-        response = Permute((2, 1))(response)  # 0-axis: batch_size; 1-axis: query_maxlen; 2-axis: story_maxlen;
-        print "\t\t\t response shape:", response.get_shape()
+        response = merge([match, story_encoder_out], mode=mode)
+
+        if self.scheme == 'hops' or self.scheme == 'dev':
+            response = Lambda(lambda x: K.sum(x, axis = 1))(response)
+        elif self.scheme == 'hops+lstm':
+            response = Lambda(lambda x: K.sum(x, axis = 1))(response)
+            response = RepeatVector(self.embedding_output_dim)(response)
+            response = Permute((2, 1))(response)  # 0-axis: batch_size; 1-axis: query_maxlen; 2-axis: story_maxlen;
+        else:
+            response = Permute((2, 1))(response)  # 0-axis: batch_size; 1-axis: query_maxlen; 2-axis: story_maxlen;
 
         return response
 
-    def _sum_output(self, response, query_encoder_in):
+    def _sum_output(self, response, query_encoder_in, mode = 'concat'):
         """
-        It computes the sum of response (Q, D) and query_encider_in (Q, D)
-            return a "out" tensor (Q, D)
+        It computes the sum of response (Q, S) and query_encider_in (Q, D)
+            return a "out" tensor (Q, S + D)
         """
-        out = merge([response, query_encoder_in], mode="sum")
-        print "\t\t\t out shape:", out.get_shape()
+        out = merge([response, query_encoder_in], mode=mode)
+
         return out
 
-    def _oneHop(self, story_encoder_in, query_encoder_in, story_encoder_out):
-        match = self._match(story_encoder_in, query_encoder_in)
-        print "\t\t match:", match.get_shape()
-        response = self._response(match, story_encoder_out)
-        print "\t\t response:", response.get_shape()
-        sum_out = self._sum_output(response, query_encoder_in)
-        print "\t\t sum_out:", sum_out.get_shape()
-        return sum_out
 
     def _add_fc_layer(self, sum_out):
         """
@@ -126,241 +127,154 @@ class MemNN(object):
             returns a prediction probability distribution over vocabulary of size V
         """
         answer_output = Dense(self.vocab_size)(sum_out)
-        print "\t\t answer_output:", answer_output.get_shape()
+
         answer_output = Activation("softmax")(answer_output)
-        print "\t\t answer_output:", answer_output.get_shape()
-        answer_output = Lambda(lambda x: K.sum(x, axis = 1))(answer_output)
 
         return answer_output
 
+    def _hopEmbedding(self):
+        """
+        It helps embed story and query specifically for hops models.
+        """
+        if self.fixed_embedding is None or self.story_input is None or self.query_input is None:
+            raise Exception("Error in self._hopEmbedding()")
 
-    def _build_layerwise_model(self):
-        story_input = Input(shape=(self.story_maxlen,), dtype="int32")
-        print "\t story_input:", story_input
-        query_input = Input(shape=(self.query_maxlen,), dtype="int32")
-        print "\t query_input:", query_input
+        if self.fixed_embedding:
+            story_encoder_in = self._embedding_in(content = 'story')(self.story_input)
+            story_encoder_in = [story_encoder_in for _ in range(self.hops)]
+            story_encoder_out = self._embedding_out(content = 'story')(self.story_input)
+            story_encoder_out = [story_encoder_out for _ in range(self.hops)]
+            query_encoder_in = self._embedding_in(content = 'query')(self.query_input)
+            query_encoder_in = [query_encoder_in for _ in range(self.hops)]
+        else:
+            story_encoder_in = [self._embedding_in(content = 'story')(self.story_input) for _ in range(self.hops)]
+            story_encoder_out = [self._embedding_out(content = 'story')(self.story_input) for _ in range(self.hops)]
+            query_encoder_in = [self._embedding_in(content = 'query')(self.query_input) for _ in range(self.hops)]
 
-        story_encoder_in = self._embedding_in(content = 'story')(story_input)
-        print "\t story_encoder_in:", story_encoder_in.get_shape()
-        story_encoder_out = self._embedding_out(content = 'story')(story_input)
-        print "\t story_encoder_out:", story_encoder_out.get_shape()
-        query_encoder_in = self._embedding_in(content = 'query')(query_input)
-        print "\t query_encoder_in:", query_encoder_in.get_shape()
+        return story_encoder_in, story_encoder_out, query_encoder_in
 
-        last_out = query_encoder_in
+    def _build_hops_model(self):
+        """
+        3 is a relatively good hop number.
+        Using higher number of hops is equivalent to paying attentions to a lot of different parts of the story equally.
+        Fundamentally, the model capacity quickly hit the roof this way.
+        Fixed embeddings achieved similar results as variable embeddings,
+            suggesting that 3-hop model helps improve the acurracy not because it increases the number of the weights but actually it allows the model to compare and shift attention.
+        """
+        self._create_input()
 
-        for _ in range(self.hops):
+        story_encoder_in, story_encoder_out, query_encoder_in = self._hopEmbedding()
 
-            last_out = self._oneHop(story_encoder_in, last_out, story_encoder_out)
-            print "\t last_out:", last_out.get_shape()
+        last_out = self.query_input
+        for i in range(self.hops):
+            match = self._match(story_encoder_in[i], query_encoder_in[i])
+            # (S, Q) = (S, D) dot (D, Q)
+            response = self._response(match, story_encoder_out[i], mode = 'mul')
+            # (Q, ) = (sum((S, Q) merge_mul (S, Q), axis = S)
+            last_out = self._sum_output(response, last_out, mode = 'sum')
+            # (Q, ) = (Q, ) sum_merge (Q, )
 
-        answer_output = self._add_fc_layer(last_out)
-        print "answer_output:", answer_output.get_shape()
+        sum_out = last_out
+        # sum_out = Lambda(lambda x: K.sum(x, axis = 1))(last_out)
+        # (D, ) = sum((Q, D), axis = Q)
+        answer_output = self._add_fc_layer(sum_out)
 
-        model = Model(input=[story_input, query_input], output=[answer_output])
-        return model
+        if self.debug:
+            print "\t last_out shape:", last_out.get_shape()
+            print "\t sum_out shape:", sum_out.get_shape()
+            print "\t answer_output:", answer_output.get_shape()
+
+        return Model(input=[self.story_input, self.query_input], output=[answer_output])
+
+
+    def _build_hops_lstm_model(self):
+        self._create_input()
+
+        story_encoder_in, story_encoder_out, query_encoder_in = self._hopEmbedding()
+
+        last_out = query_encoder_in[0]
+        for i in range(self.hops):
+            match = self._match(story_encoder_in[i], last_out)
+            # (S, Q) = (S, D) dot (D, Q)
+            response = self._response(match, story_encoder_out[i], mode = 'mul')
+            # (Q, D) = permute(expand_to_D(sum((S, Q) merge_mul (S, Q), axis = S)))
+            last_out = self._sum_output(response, query_encoder_in[i], mode = 'sum')
+            # (Q, D) = (Q, D) merge_mul (Q, D)
+
+        seq_out = LSTM(32)(last_out)
+
+        answer_output = self._add_fc_layer(seq_out)
+
+        if self.debug:
+            print "\t last_out shape:", last_out.get_shape()
+            print "\t answer_output:", answer_output.get_shape()
+
+        return Model(input=[self.story_input, self.query_input], output=[answer_output])
+
+
+    def _build_mem_lstm_model(self):
+        """
+        80%
+        """
+        self._create_input()
+
+        story_encoder_in, story_encoder_out, query_encoder_in = self._hopEmbedding()
+
+        match = self._match(story_encoder_in[0], query_encoder_in[0])
+        response = self._response(match, story_encoder_out[0], mode = 'mul')
+        sum_out = self._sum_output(response, query_encoder_in[0], mode = 'concat')
+
+        answer_output = LSTM(32)(sum_out)
+        answer_output = self._add_fc_layer(answer_output)
+
+        return Model(input=[self.story_input, self.query_input], output=[answer_output])
 
 
     def _build_dev_model(self):
-        story_input = Input(shape=(self.story_maxlen,), dtype="int32")
-        print "\t story_input:", story_input
-        query_input = Input(shape=(self.query_maxlen,), dtype="int32")
-        print "\t query_input:", query_input
+        self._create_input()
 
-        story_encoder_in = self._embedding_in(content = 'story')(story_input)
-        print "\t story_encoder_in:", story_encoder_in.get_shape()
-        story_encoder_out = self._embedding_out(content = 'story')(story_input)
-        print "\t story_encoder_out:", story_encoder_out.get_shape()
-        query_encoder_in = self._embedding_in(content = 'query')(query_input)
-        print "\t query_encoder_in:", query_encoder_in.get_shape()
+        story_encoder_in, story_encoder_out, query_encoder_in = self._hopEmbedding()
 
-        last_out = self._oneHop(story_encoder_in, query_encoder_in, story_encoder_out)
-        print "\t last_out:", last_out.get_shape()
+        last_out = self.query_input
+        for i in range(self.hops):
+            seq_story_encoder = LSTM(self.query_maxlen)(story_encoder_in[i])
+            seq_query_encoder = LSTM(self.query_maxlen)(query_encoder_in[i])
+            seq_story_query = merge([seq_story_encoder, seq_query_encoder], mode = 'sum')
 
-        # print K.is_keras_tensor(last_out)
-        #
-        # last_out = Lambda(lambda x: K.floor(x))(last_out)
-        # print K.is_keras_tensor(last_out)
+            match = self._match(story_encoder_in[i], query_encoder_in[i])
+            # (S, Q) = (S, D) dot (D, Q)
+            response = self._response(match, story_encoder_out[i], mode = 'mul')
+            # (Q, ) = sum((S, Q) merge_mul (S, Q), axis = S))
+            last_out = self._sum_output(response, seq_story_query, mode = 'sum')
+            # (Q, ) = (Q, ) merge_mul (Q, )
 
-        # query_encoder_in = self._embedding_in(content = 'query')(last_out)
-        # print "\t query_encoder_in:", query_encoder_in.get_shape()
+        # seq_out = LSTM(32)(last_out)
+        answer_output = self._add_fc_layer(last_out)
 
-        last_out = self._oneHop(story_encoder_in, last_out, story_encoder_out)
-        last_out = Lambda(lambda x: K.sum(x, axis = 2))(last_out)
-        # match = self._match(story_encoder_in, query_encoder_in)
-        # match (S, Q)
+        if self.debug:
+            print "\t last_out shape:", last_out.get_shape()
+            print "\t answer_output:", answer_output.get_shape()
 
-        # response = self._response(match, story_encoder_out)
-        # response (Q, S)
+        return Model(input=[self.story_input, self.query_input], output=[answer_output])
 
-        # answer_output = LSTM(4)(match)
-        # answer_output = Lambda(lambda x: K.sum(x, axis = 2))(match)
-        # print answer_output.get_shape()
-
-        # answer_output = self._add_fc_layer(answer_output)
-        answer_output = Dense(self.vocab_size)(last_out)
-        print "\t\t answer_output:", answer_output.get_shape()
-
-
-        return Model(input=[story_input, query_input], output=[answer_output])
 
     def build(self):
-        if self.weights_sharing == 'layerwise':
-            return self._build_layerwise_model()
-
-        elif self.weights_sharing == 'dev':
+        if self.scheme == "hops":
+            return self._build_hops_model()
+        if self.scheme == "hops+lstm":
+            return self._build_hops_lstm_model()
+        if self.scheme == 'mem+lstm':
+            return self._build_mem_lstm_model()
+        if self.scheme == "dev":
             return self._build_dev_model()
         else:
             raise Exception("under dev...")
 
 
-''' ----------------------------------------------------------------------------
 
-def build_memnn(story_maxlen, query_maxlen, vocab_size, embedding_output_dim=64):
-
-    print "NOW IN build_memnn() -----------------------------------------------"
-    # An Input() object is a tensor
-    story_input = Input(shape=(story_maxlen,), dtype="int32")
-
-    # An Embedding() object is a layer, callable on a tensor
-    # takes in an Input() object in shape(S, ) with S is the maxlength of stories,
-    # embeds each s in space(V, D) where s is in vocabulary of size V.
-    # returns a tensor in shape(S, D)
-    # output: (batch_size, S, D)
-    story_encoder_m = Embedding(input_dim=vocab_size, # V
-                                output_dim=embedding_output_dim, # D
-                                input_length=story_maxlen)(story_input) # S
-    print "story_encoder_m in build_memnn() is in shape::", story_encoder_m.get_shape()
-    # A Dropout() object is a layer, callable on a tensor, returns a tensor
-    story_encoder_m = Dropout(0.3)(story_encoder_m)
-
-    # same as embedding story_encoder_m
-    # output: (batch_size, Q, D) where Q is the maxlength of queries.
-    question_input = Input(shape=(query_maxlen,), dtype="int32")
-    question_encoder = Embedding(input_dim=vocab_size,
-                                 output_dim=embedding_output_dim,
-                                 input_length=query_maxlen)(question_input)
-    question_encoder = Dropout(0.3)(question_encoder)
-    print "question_encoder in build_memnn() is in shape::", question_encoder.get_shape()
-    # story_encoder_m: (batch_size, S, D), question_encoder: (batch_size, Q, D)
-    # compute a 'match', a dot product between embeded story and embeded question.
-    # output: (sabatch_sizemples, S, Q) go through sfmx activation interpreted as a probability vector over the input.
-    match = merge([story_encoder_m, question_encoder], mode="dot",
-                  dot_axes=[2, 2])
-    match = Activation("softmax")(match)
-    print "match in build_memnn() is in shape::", match.get_shape()
-    # Notice the output_dim = Q instead of D
-    # output: (batch_size, S, Q)
-    story_encoder_c = Embedding(input_dim=vocab_size,
-                                output_dim=query_maxlen,
-                                input_length=story_maxlen)(story_input)
-    story_encoder_c = Dropout(0.3)(story_encoder_c)
-    print "story_encoder_c in build_memnn() is in shape::", story_encoder_c.get_shape()
-    # response vector is the embeded input weighted by the "match" probability
-    # output: permute (batch_size, S, Q) to (batch_size, Q, S)
-    response = merge([match, story_encoder_c], mode="mul") # the mode used to be "sum"
-    response = Permute((2, 1))(response)
-    print "response in build_memnn() is in shape::", response.get_shape()
-
-    # response: (batch_size, Q, S), question_encoder: (batch_size, Q, D)
-    answer_encoder = merge([response, question_encoder], mode="concat", concat_axis=-1)
-    print "right after concat -> answer_encoder in build_memnn() is in shape::", answer_encoder.get_shape()
-
-
-    """
-        The input to LSTM is in shape(batch_size, Q, S) corresponding to the classic format (sample_number, timesteps, input_dim)
-        The output of LSTM is in shape(batch_size, Q, 32) where 32 is arbitrary number of hidden states.
-    """
-    answer_encoder = LSTM(32)(answer_encoder)
-    print "right after LSTM -> answer_encoder in build_memnn() is in shape::", answer_encoder.get_shape()
-    # one regularization layer -- more would probably be needed.
-    answer_encoder = Dropout(0.3)(answer_encoder)
-    answer_encoder = Dense(vocab_size)(answer_encoder)
-    answer_output = Activation("softmax")(answer_encoder)
-    # we output a probability distribution over the vocabulary
-    print "answer_output in build_memnn() is in shape::", answer_output.get_shape()
-    answer = Model(input=[story_input, question_input], output=[answer_output])
-
-    return answer
-
-
-def build_memnn_s(story_maxlen, query_maxlen, vocab_size, embedding_output_dim):
-    """
-    If we want to merge response and question_encoder via "sum" instead of "concat",
-    so that the dimension wouldn't increase as we stack more layers,
-    we need to ensure embedding_output_dim == story_maxlen.
-    """
-    if story_maxlen != embedding_output_dim:
-        raise Exception('ERROR in build_memnn_s(): model failed to build because story_maxlen NOT equals embedding_output_dim')
-
-    # An Input() object is a tensor
-    story_input = Input(shape=(story_maxlen,), dtype="int32")
-
-    # An Embedding() object is a layer, callable on a tensor
-    # takes in an Input() object in shape(S, ) with S is the maxlength of stories,
-    # embeds each s in space(V, D) where s is in vocabulary of size V
-    # ----------------------------------------------------------------------
-    # in our case, the embedding space is (V, S) where the embedding_output_dim is S.
-    # ----------------------------------------------------------------------
-    # returns a tensor in shape(S, D)
-    # output: (batch_size, S, D) -> corresponding to classic input dimensionality to LSTM gate (batch_size, sequence_of_input, each_input_length)
-    story_encoder_m = Embedding(input_dim=vocab_size, # V
-                                output_dim=embedding_output_dim, # D
-                                input_length=story_maxlen)(story_input) # S
-
-    # A Dropout() object is a layer, callable on a tensor, returns a tensor
-    story_encoder_m = Dropout(0.3)(story_encoder_m)
-
-    # same as embedding story_encoder_m
-    # output: (batch_size, Q, D) where Q is the maxlength of queries.
-    question_input = Input(shape=(query_maxlen,), dtype="int32")
-    question_encoder = Embedding(input_dim=vocab_size,
-                                 output_dim=embedding_output_dim,
-                                 input_length=query_maxlen)(question_input)
-    question_encoder = Dropout(0.3)(question_encoder)
-
-    # story_encoder_m: (batch_size, S, D), question_encoder: (batch_size, Q, D)
-    # compute a 'match', a dot product between embeded story and embeded question.
-    # output: (batch_size, S, Q) go through sfmx activation interpreted as a probability vector over the input.
-    match = merge([story_encoder_m, question_encoder], mode="dot", # story_encoder_m.dot(question_encoder.T)
-                  dot_axes=[2, 2])
-    match = Activation("softmax")(match)
-
-    # Notice the only difference of this embedding layer: output_dim = Q instead of D
-    # output: (batch_size, S, Q)
-    story_encoder_c = Embedding(input_dim=vocab_size,
-                                output_dim=query_maxlen,
-                                input_length=story_maxlen)(story_input)
-    story_encoder_c = Dropout(0.3)(story_encoder_c)
-
-
-    # match: (batch_size, S, Q), story_encoder_c: (batch_size, S, Q)
-    # response vector is the embeded input weighted by the "match" probability
-    response = merge([match, story_encoder_c], mode="mul") # the mode used to be "sum"
-    # output: permute (batch_size, S, Q) to (batch_size, Q, S)
-    response = Permute((2, 1))(response)
-
-
-    """
-    response: (batch_size, Q, S), question_encoder: (batch_size, Q, D)
-    remember we have D equal to S, we can choose mode = 'sum'
-    """
-    answer_encoder = merge([response, question_encoder], mode="sum")
-
-    """
-    The input to LSTM is in shape(batch_size, Q, S) corresponding to the classic format (sample_number, timesteps, input_dim)
-    The output of LSTM is in shape(batch_size, Q, 32) where 32 is arbitrary number of hidden states.
-    """
-    answer_encoder = LSTM(32)(answer_encoder)
-    # one regularization layer -- more would probably be needed.
-    answer_encoder = Dropout(0.3)(answer_encoder)
-    # W(response + question_encoder) outputs (batch_size, V) where V is the vocab_size
-    answer_encoder = Dense(vocab_size)(answer_encoder)
-    # sfmx(W(response + question_encoder)) outputs the probability distribution over the vocabulary
-    answer_output = Activation("softmax")(answer_encoder)
-
-    answer = Model(input=[story_input, question_input], output=[answer_output])
-
-    return answer
---------------------------------------------------------------------------------
-'''
+        # if self.debug:
+        #     print "\t story_input:", story_input.get_shape()
+        #     print "\t query_input:", query_input.get_shape()
+        #     print "\t story_encoder_in:", story_encoder_in.get_shape()
+        #     print "\t story_encoder_out:", story_encoder_out.get_shape()
+        #     print "\t query_encoder_in:", query_encoder_in.get_shape()

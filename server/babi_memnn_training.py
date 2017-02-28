@@ -11,7 +11,7 @@ from qaTasks import challenges
 from training_data_utils import get_stories, vectorize_stories, get_babi_training_data, word2int_encode
 from functools import reduce
 import pickle
-from config import OUTPUT_PATH, MODEL, NUM_EPOCHS
+from config import OUTPUT_PATH, MODEL, NUM_EPOCHS, PARAMS, SCHEME
 # from model_builder import MemNN
 
 
@@ -70,12 +70,7 @@ def train_memnn_on(challenge_type, output_path, num_epochs):
     print('-')
     print('Compiling...')
 
-    # answer = MODEL(story_maxlen, query_maxlen, vocab_size) # -> "concat"
-
-    # answer = MODEL(story_maxlen, query_maxlen, vocab_size, story_maxlen) # -> "sum"
-
-    # answer = MemNN(story_maxlen, query_maxlen, vocab_size, 64, hops = 1, weights_sharing = 'dev').build()
-    answer = MODEL(story_maxlen, query_maxlen, vocab_size, 64, hops = 5, weights_sharing = 'layerwise').build()
+    answer = MODEL(story_maxlen, query_maxlen, vocab_size, 64, PARAMS, scheme = SCHEME, debug = True).build()
 
     answer.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
 
